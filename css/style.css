@@ -1,0 +1,53 @@
+* {
+    font-family: "Open Sans", sans-serif;
+    text-align: center;
+}
+
+body {
+    background-color: #fdfdfd;
+}
+
+input {
+    outline: none;
+    font-size: 1.2rem;
+    width: 90px;
+}
+
+a {
+    font-size: 1.2rem;
+    color: lime;
+    text-decoration: none;
+    line-height: 30px;
+}
+
+.hD {
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.calc-container {
+    width: 900px;
+    height: 700px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #adadad;
+    border: solid #adadad;
+    border-radius: 15px;
+}
+
+.points-container {
+    max-width: 900px;
+    max-height: 700px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.calc {
+    background-color: rgba(255, 0, 0, 25%);
+    width: 700px;
+    margin: 10px;
+}

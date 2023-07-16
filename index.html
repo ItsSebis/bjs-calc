@@ -17,8 +17,10 @@
           integrity="sha512-yVvxUQV0QESBt1SyZbNJMAwyKvFTLMyXSyBHDO4BG5t7k/Lw34tyqlSDlKIrIENIzCl+RVUNjmCPG+V/GMesRw=="
           crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>BJS Rechner</title>
+    <script src="https://unpkg.com/pdf-lib@1.4.0"></script>
+    <script src="https://unpkg.com/downloadjs@1.4.7"></script>
 </head>
-<body>
+<body id="body">
 <div class="calc-container">
     <div class="points-container">
         <h1><a href="javascript:genderSwap();" id="gender" style="font-size: inherit; color: green">Mädchen</a> Rechner</h1>
@@ -32,7 +34,7 @@
             </tr>
             <tr>
                 <td>
-                    <p align="center"><input id="sprintSec" type="number" step="0.01" value="0.00" min="0"> sek</p>
+                    <p align="center"><input id="sprintSec" type="number" step="0.01" placeholder="0.00" min="0"> sek</p>
                     <p><input style="width: min-content" type="checkbox" id="tolerance" checked> Handzeitmessung</p>
                 </td>
                 <td align="center">
@@ -41,7 +43,7 @@
                     <a href="javascript:sprintPoints(document.getElementById('sprintSec').value, 100)">100m</a><br>
                 </td>
                 <td align="center">
-                    <span style="font-size: 1.5rem" id="sprintPoints">0</span>
+                    <span style="font-size: 1.5rem" id="sprintPoints" class="reset">0</span>
                 </td>
             </tr>
             </tbody>
@@ -56,8 +58,8 @@
             </tr>
             <tr>
                 <td>
-                    <p align="center"><input id="runMin" type="number" value="0" min="0"> min</p>
-                    <p align="center"><input id="runSec" type="number" value="0" min="0"> sek</p>
+                    <p align="center"><input id="runMin" type="number" placeholder="0" min="0"> min</p>
+                    <p align="center"><input id="runSec" type="number" placeholder="0" min="0"> sek</p>
                 </td>
                 <td align="center">
                     <a href="javascript:runPoints(Number(document.getElementById('runMin').value*60)+Number(document.getElementById('runSec').value), 800)" id="gRun">800m</a><br>
@@ -65,7 +67,7 @@
                     <a href="javascript:runPoints(Number(document.getElementById('runMin').value*60)+Number(document.getElementById('runSec').value), 3000)">3000m</a><br>
                 </td>
                 <td align="center">
-                    <span style="font-size: 1.5rem" id="runPoints">0</span>
+                    <span style="font-size: 1.5rem" id="runPoints" class="reset">0</span>
                 </td>
             </tr>
             </tbody>
@@ -80,14 +82,14 @@
             </tr>
             <tr>
                 <td>
-                    <p align="center"><input id="jumpCm" type="number" value="0" min="0"> cm</p>
+                    <p align="center"><input id="jumpM" type="number" placeholder="0.00" step="0.01" min="0"> m</p>
                 </td>
                 <td align="center">
-                    <a href="javascript:jumpPoints(Number(document.getElementById('jumpCm').value), 'highjump')">Hochsprung</a><br>
-                    <a href="javascript:jumpPoints(Number(document.getElementById('jumpCm').value), 'longjump')">Weitsprung</a><br>
+                    <a href="javascript:jumpPoints(Number(document.getElementById('jumpM').value), 'highjump')">Hochsprung</a><br>
+                    <a href="javascript:jumpPoints(Number(document.getElementById('jumpM').value), 'longjump')">Weitsprung</a><br>
                 </td>
                 <td align="center">
-                    <span style="font-size: 1.5rem" id="jumpPoints">0</span>
+                    <span style="font-size: 1.5rem" id="jumpPoints" class="reset">0</span>
                 </td>
             </tr>
             </tbody>
@@ -102,7 +104,7 @@
             </tr>
             <tr>
                 <td>
-                    <p align="center"><input id="ballM" type="number" step="0.01" value="0.00" min="0"> m</p>
+                    <p align="center"><input id="ballM" type="number" step="0.01" placeholder="0.00" min="0"> m</p>
                 </td>
                 <td align="center">
                     <a href="javascript:ballPoints(Number(document.getElementById('ballM').value), 'Ball80G')">Schlagball 80g</a><br>
@@ -111,14 +113,15 @@
                     <a href="javascript:ballPoints(Number(document.getElementById('ballM').value), 'slingshot')">Schleuderball</a><br>
                 </td>
                 <td align="center">
-                    <span style="font-size: 1.5rem" id="ballPoints">0</span>
+                    <span style="font-size: 1.5rem" id="ballPoints" class="reset">0</span>
                 </td>
             </tr>
             </tbody>
         </table>
-        <p>Summe der Punkte: <span id="points">0</span></p>
+        <p>Summe der Punkte: <span id="points" class="reset">0</span></p>
         <label for="age">Alter: </label>
         <select id="age">
+            <option value="null">Alter</option>
             <option value="8">8</option>
             <option value="9">9</option>
             <option value="10">10</option>
@@ -132,11 +135,26 @@
             <option value="18">18</option>
             <option value="19">19+</option>
         </select><br>
-        <span id="cert" style="font-size: 1.5rem">Keine Eingabe</span>
+        <span id="cert" style="font-size: 1.5rem">Keine Eingabe</span><br>
+        <input type="text" id="uid" placeholder="UID..." style="width: 400px; margin: 10px"><br>
+        <button type="submit" id="addBtn">Hinzufügen</button>
     </div>
 </div>
+<div class="list">
+    <button onclick="createPdf()" id="pdf">PDF</button>
+    <table>
+        <thead>
+        <tr>
+            <th style="max-width: 100px">UID</th>
+            <th>Punkte</th>
+            <th>Urkunde</th>
+        </tr>
+        </thead>
+        <tbody id="listBody"></tbody>
+    </table>
+</div>
 <span style="position: absolute; bottom: 5px; right: 5px;">
-    <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis/bjs-calc">1.0</a>
+    <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis/bjs-calc">1.1</a>
     <span style="color: #989898">(16.7.23 von <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis">Sebi</a>)</span></span>
 <script type="text/javascript" src="js/index.js"></script>
 </body>

@@ -20,6 +20,10 @@ a {
     line-height: 30px;
 }
 
+a:hover {
+    text-decoration: underline;
+}
+
 .hD {
     font-size: 1.3rem;
     font-weight: bold;

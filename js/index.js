@@ -23,6 +23,20 @@ let ACs = {
             slingshot: {a: 1.08500, c: 0.00921, name: "Schleuderball"},
             Ball200G: {a: 1.41490, c: 0.01039, name: "200g"},
             Ball80G: {a: 2.02320, c: 0.00874, name: "80g"}
+        },
+        certificates: {
+            8: {s: 475, e: 625},
+            9: {s: 550, e: 725},
+            10: {s: 625, e: 825},
+            11: {s: 700, e: 900},
+            12: {s: 775, e: 975},
+            13: {s: 825, e: 1025},
+            14: {s: 850, e: 1050},
+            15: {s: 875, e: 1075},
+            16: {s: 900, e: 1100},
+            17: {s: 925, e: 1125},
+            18: {s: 950, e: 1150},
+            19: {s: 950, e: 1150}
         }
     },
     boy: {
@@ -45,9 +59,28 @@ let ACs = {
             slingshot: {a: 1.59500, c: 0.009125, name: "Schleuderball"},
             Ball200G: {a: 1.93600, c: 0.01240, name: "200g"},
             Ball80G: {a: 2.80000, c: 0.01100, name: "80g"}
+        },
+        certificates: {
+            8: {s: 450, e: 575},
+            9: {s: 525, e: 675},
+            10: {s: 600, e: 775},
+            11: {s: 675, e: 875},
+            12: {s: 750, e: 975},
+            13: {s: 825, e: 1050},
+            14: {s: 900, e: 1125},
+            15: {s: 975, e: 1225},
+            16: {s: 1050, e: 1325},
+            17: {s: 1125, e: 1400},
+            18: {s: 1200, e: 1475},
+            19: {s: 1275, e: 1550}
         }
     }
 }
+
+// code
+document.getElementById("age").onchange = function () {addPoints();}
+
+// functions
 
 function genderSwap() {
     gender = !gender;
@@ -67,7 +100,44 @@ function genderSwap() {
 }
 
 function addPoints() {
-    document.getElementById("points").innerText = String(Number(document.getElementById("sprintPoints").innerText)+Number(document.getElementById("runPoints").innerText))
+    let points = [
+        Number(document.getElementById("sprintPoints").innerText),
+        Number(document.getElementById("runPoints").innerText),
+        Number(document.getElementById("jumpPoints").innerText),
+        Number(document.getElementById("ballPoints").innerText)
+    ]
+    let sum = 0
+    let low
+    for (const dPoints of points) {
+        if (low === undefined) {
+            low = dPoints
+        } else if (low >= dPoints) {
+            sum += low
+            low = dPoints
+        } else {
+            sum += dPoints
+        }
+    }
+    document.getElementById("points").innerText = String(sum)
+    calcCert(sum)
+}
+
+function calcCert(points) {
+    let age = document.getElementById("age").value
+    let limits = ACs.girl.certificates;
+    if (!gender) {
+        limits = ACs.boy.certificates;
+    }
+    let overflow = points - limits[age].s
+    let cert = "<span style='color: lime'>Teilnehmerurkunde</span> <span style='color: #424242'>(" + overflow + " von Siegerurkunde)</span>"
+    if (limits[age].e < points) {
+        overflow = "+"+(points-limits[age].e)
+        cert = "<span style='color: gold'>Ehrenurkunde</span> <span style='color: #424242'>" + overflow + "</span>"
+    } else if (limits[age].s < points) {
+        let overflow = points - limits[age].e
+        cert = "<span style='color: white'>Siegerurkunde</span> <span style='color: #424242'>(" + overflow + " von Ehrenurkunde)</span>"
+    }
+    document.getElementById("cert").innerHTML = cert;
 }
 
 function sprintPoints(sec, dist) {
@@ -110,5 +180,44 @@ function runPoints(sec, dist) {
         return;
     }
     document.getElementById("runPoints").innerText = String(points)
+    addPoints();
+}
+
+function jumpPoints(dist, type) {
+    let points = 0
+    let a,c
+    if (gender) {
+        a = ACs.girl.jump[type].a;
+        c = ACs.girl.jump[type].c;
+    } else {
+        a = ACs.boy.jump[type].a;
+        c = ACs.boy.jump[type].c;
+    }
+    dist = Math.abs(dist)/100;
+    points = Math.round((Math.sqrt(dist) - a) / c);
+    console.log(points + " " + dist + " " + type)
+    if (points <= 0 || points >= 1000) {
+        return;
+    }
+    document.getElementById("jumpPoints").innerText = String(points)
+    addPoints();
+}
+
+function ballPoints(dist, type) {
+    let points = 0
+    let a,c
+    if (gender) {
+        a = ACs.girl.ball[type].a;
+        c = ACs.girl.ball[type].c;
+    } else {
+        a = ACs.boy.ball[type].a;
+        c = ACs.boy.ball[type].c;
+    }
+    dist = Math.abs(dist);
+    points = Math.round((Math.sqrt(dist) - a) / c);
+    if (points <= 0 || points >= 1000) {
+        return;
+    }
+    document.getElementById("ballPoints").innerText = String(points)
     addPoints();
 }

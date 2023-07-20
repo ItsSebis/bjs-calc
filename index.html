@@ -36,9 +36,9 @@
                     <p><input style="width: min-content" type="checkbox" id="tolerance" checked> Handzeitmessung</p>
                 </td>
                 <td align="center">
-                    <a href="javascript:sprintPoints(document.getElementById('sprintSec').value, 50)">50m</a><br>
-                    <a href="javascript:sprintPoints(document.getElementById('sprintSec').value, 75)">75m</a><br>
-                    <a href="javascript:sprintPoints(document.getElementById('sprintSec').value, 100)">100m</a><br>
+                    <a href="javascript:sprintPoints(document.getElementById('sprintSec').value, 50)" id="sprint1">50m</a><br>
+                    <a href="javascript:sprintPoints(document.getElementById('sprintSec').value, 75)" id="sprint2">75m</a><br>
+                    <a href="javascript:sprintPoints(document.getElementById('sprintSec').value, 100)" id="sprint3">100m</a><br>
                 </td>
                 <td align="center">
                     <span style="font-size: 1.5rem" id="sprintPoints">0</span>
@@ -60,9 +60,9 @@
                     <p align="center"><input id="runSec" type="number" value="0" min="0"> sek</p>
                 </td>
                 <td align="center">
-                    <a href="javascript:runPoints(Number(document.getElementById('runMin').value*60)+Number(document.getElementById('runSec').value), 800)" id="gRun">800m</a><br>
-                    <a href="javascript:runPoints(Number(document.getElementById('runMin').value*60)+Number(document.getElementById('runSec').value), 2000)">2000m</a><br>
-                    <a href="javascript:runPoints(Number(document.getElementById('runMin').value*60)+Number(document.getElementById('runSec').value), 3000)">3000m</a><br>
+                    <a href="javascript:runPoints(Number(document.getElementById('runMin').value*60)+Number(document.getElementById('runSec').value), 800)" id="run1">800m</a><br>
+                    <a href="javascript:runPoints(Number(document.getElementById('runMin').value*60)+Number(document.getElementById('runSec').value), 2000)" id="run2">2000m</a><br>
+                    <a href="javascript:runPoints(Number(document.getElementById('runMin').value*60)+Number(document.getElementById('runSec').value), 3000)" id="run3">3000m</a><br>
                 </td>
                 <td align="center">
                     <span style="font-size: 1.5rem" id="runPoints">0</span>
@@ -83,8 +83,8 @@
                     <p align="center"><input id="jumpCm" type="number" value="0" min="0"> cm</p>
                 </td>
                 <td align="center">
-                    <a href="javascript:jumpPoints(Number(document.getElementById('jumpCm').value), 'highjump')">Hochsprung</a><br>
-                    <a href="javascript:jumpPoints(Number(document.getElementById('jumpCm').value), 'longjump')">Weitsprung</a><br>
+                    <a href="javascript:jumpPoints(Number(document.getElementById('jumpCm').value), 'highjump')" id="jump1">Hochsprung</a><br>
+                    <a href="javascript:jumpPoints(Number(document.getElementById('jumpCm').value), 'longjump')" id="jump2">Weitsprung</a><br>
                 </td>
                 <td align="center">
                     <span style="font-size: 1.5rem" id="jumpPoints">0</span>
@@ -105,10 +105,10 @@
                     <p align="center"><input id="ballM" type="number" step="0.01" value="0.00" min="0"> m</p>
                 </td>
                 <td align="center">
-                    <a href="javascript:ballPoints(Number(document.getElementById('ballM').value), 'Ball80G')">Schlagball 80g</a><br>
-                    <a href="javascript:ballPoints(Number(document.getElementById('ballM').value), 'Ball200G')">Schlagball 200g</a><br>
-                    <a href="javascript:ballPoints(Number(document.getElementById('ballM').value), 'shotput')">Kugelstoßen</a><br>
-                    <a href="javascript:ballPoints(Number(document.getElementById('ballM').value), 'slingshot')">Schleuderball</a><br>
+                    <a href="javascript:ballPoints(Number(document.getElementById('ballM').value), 'Ball80G')" id="ball1">Schlagball 80g</a><br>
+                    <a href="javascript:ballPoints(Number(document.getElementById('ballM').value), 'Ball200G')" id="ball2">Schlagball 200g</a><br>
+                    <a href="javascript:ballPoints(Number(document.getElementById('ballM').value), 'shotput')" id="ball3">Kugelstoßen</a><br>
+                    <a href="javascript:ballPoints(Number(document.getElementById('ballM').value), 'slingshot')" id="ball4">Schleuderball</a><br>
                 </td>
                 <td align="center">
                     <span style="font-size: 1.5rem" id="ballPoints">0</span>
@@ -136,7 +136,7 @@
     </div>
 </div>
 <span style="position: absolute; bottom: 5px; right: 5px;">
-    <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis/bjs-calc">1.0</a>
+    <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis/bjs-calc">1.1</a>
     <span style="color: #989898">(16.7.23 von <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis">Sebi</a>)</span></span>
 <script type="text/javascript" src="js/index.js"></script>
 </body>

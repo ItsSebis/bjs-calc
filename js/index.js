@@ -1,6 +1,12 @@
 // two genders
 let gender = true
 
+// lists
+let allList = {}
+
+// pdf
+const { PDFDocument, StandardFonts, rgb } = PDFLib;
+
 // ac consts
 let ACs = {
     girl: {
@@ -79,8 +85,99 @@ let ACs = {
 
 // code
 document.getElementById("age").onchange = function () {addPoints();}
+document.getElementById("addBtn").onclick = function () {
+    if (document.getElementById("uid").value === "" || allList[document.getElementById("uid").value] !== undefined ||
+        document.getElementById("uid").value.match(/[^A-Za-z0-9 ]/)) {
+        alert("Gib bitte einen einzigartigen Identifikator aus Buchstaben und Zahlen an!")
+        return
+    }
+    if (Number(document.getElementById("points").innerText) === 0) {
+        alert("Gib bitte mindestens eine Disziplin an!")
+        return;
+    }
+    if (document.getElementById("age").value === "null") {
+        alert("Gib bitte ein Alter an!")
+        return;
+    }
+    if (
+        // not all disciplines given
+        Number(document.getElementById("sprintPoints").innerText) === 0 ||
+        Number(document.getElementById("runPoints").innerText) === 0 ||
+        Number(document.getElementById("jumpPoints").innerText) === 0 ||
+        Number(document.getElementById("ballPoints").innerText) === 0
+    ) {
+        const rs = confirm("Du hast nicht alle Disziplinen angegeben, so werden vielleicht nicht die richtigen Punkte verwendet. Bist du sicher, dass du fortfahren möchtest?")
+        if (!rs) {
+            return;
+        }
+    }
+    const uid = document.getElementById("uid").value;
+    allList[uid] = {
+        points: {
+            sum: Number(document.getElementById("points").innerText),
+            sprint: Number(document.getElementById("sprintPoints").innerText),
+            run: Number(document.getElementById("runPoints").innerText),
+            jump: Number(document.getElementById("jumpPoints").innerText),
+            ball: Number(document.getElementById("ballPoints").innerText)
+        },
+        values: {
+            sprint: Number(document.getElementById("sprintSec").value),
+            run: Number(document.getElementById('runMin').value*60)+Number(document.getElementById('runSec').value),
+            jump: Number(document.getElementById("jumpM").value),
+            ball: Number(document.getElementById("ballM").value),
+        },
+        cert: document.getElementById("cert").innerText.split(" ")[0]
+    }
+    for (const points of document.getElementsByClassName("reset")) {
+        points.innerHTML = "0";
+    }
+    for (const value of document.getElementsByTagName("input")) {
+        value.value = ""
+    }
+    document.getElementById("cert").innerText = "Keine Eingabe"
+    document.getElementById("age").value = "null"
+    calcList()
+}
 
 // functions
+
+async function createPdf(){
+    const pdfDoc = await PDFDocument.create()
+    const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman)
+
+    for (const uid in allList) {
+        const data = allList[uid];
+        const page = pdfDoc.addPage()
+        const { width, height } = page.getSize()
+        console.log(width + " " + height)
+        const fontSize = 18
+        page.drawText(uid, {
+            x: width/2,
+            y: height/2-100,
+            size: fontSize,
+            font: timesRomanFont,
+            color: rgb(0, 0, 0),
+        })
+        page.drawText(String(data.points.sum), {
+            x: 300,
+            y: 500,
+            size: 14,
+            font: timesRomanFont,
+            color: rgb(0,0,0)
+        })
+    }
+
+    //const pdfBytes = await pdfDoc.save()
+    const pdfDataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+    const iframe = document.createElement("iframe")
+    iframe.src = pdfDataUri
+    iframe.setAttribute("width", String(window.innerWidth-50));
+    iframe.setAttribute("height", String(window.innerHeight-50));
+    for (const div of document.getElementById("body").getElementsByTagName("div")) {
+        div.style.display = "none"
+    }
+    document.getElementById("body").appendChild(iframe)
+}
 
 function genderSwap() {
     gender = !gender;
@@ -124,6 +221,9 @@ function addPoints() {
 
 function calcCert(points) {
     let age = document.getElementById("age").value
+    if (age === "null") {
+        return
+    }
     let limits = ACs.girl.certificates;
     if (!gender) {
         limits = ACs.boy.certificates;
@@ -138,6 +238,17 @@ function calcCert(points) {
         cert = "<span style='color: white'>Siegerurkunde</span> <span style='color: #424242'>(" + overflow + " von Ehrenurkunde)</span>"
     }
     document.getElementById("cert").innerHTML = cert;
+}
+
+function calcList() {
+    for (const uid in allList) {
+        console.log(allList[uid])
+        let row = document.createElement("TR")
+        row.innerHTML = "<td style=\"max-width: 150px\">" + uid + "</td>\n" +
+            "<td>" + allList[uid].points.sum + "</td>\n" +
+            "<td>" + allList[uid].cert + "</td>"
+        document.getElementById("listBody").append(row)
+    }
 }
 
 function sprintPoints(sec, dist) {

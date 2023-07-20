@@ -134,6 +134,9 @@ document.getElementById("addBtn").onclick = function () {
     for (const value of document.getElementsByTagName("input")) {
         value.value = ""
     }
+    for (const value of document.getElementsByClassName("active")) {
+        value.classList.remove("active")
+    }
     document.getElementById("cert").innerText = "Keine Eingabe"
     document.getElementById("age").value = "null"
     calcList()

@@ -5,12 +5,24 @@
 
 body {
     background-color: #fdfdfd;
-}
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;}
 
 input {
     outline: none;
     font-size: 1.2rem;
     width: 90px;
+    border: solid gray;
+    border-radius: 10px;
+}
+
+button {
+    outline: none;
+    font-size: 1.2rem;
+    border: solid gray;
+    border-radius: 10px;
+    cursor: pointer;
 }
 
 a {
@@ -31,11 +43,11 @@ a:hover {
 
 .calc-container {
     width: 900px;
-    height: 700px;
+    height: 850px;
     position: absolute;
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    left: 30%;
+    transform: translate(-30%, -50%);
     background-color: #adadad;
     border: solid #adadad;
     border-radius: 15px;
@@ -43,17 +55,50 @@ a:hover {
 
 .points-container {
     max-width: 900px;
-    max-height: 700px;
+    max-height: 850px;
     position: absolute;
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    left: 40%;
+    transform: translate(-40%, -50%);
 }
 
 .calc {
     background-color: rgba(255, 0, 0, 25%);
     width: 700px;
     margin: 10px;
+}
+
+.list {
+    width: 400px;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    background-color: #adadad;
+    padding: 5px;
+    border: solid #adadad;
+    border-radius: 15px;
+}
+
+.list table {
+    margin: 0 auto;
+    width: 280px;
+}
+
+.list table tr {
+    line-height: 25px;
+    font-size: 1.3rem;
+}
+
+.list table tr td {
+    padding: 10px;
+}
+
+.list table tbody tr:nth-child(even) {
+    background-color: #adadad;
+}
+
+.list table tbody tr:nth-child(odd) {
+    background-color: #878787;
 }
 
 a.active {

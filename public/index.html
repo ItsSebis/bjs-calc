@@ -1,6 +1,6 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>BJS Rechner</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="css/style.css">
@@ -16,9 +16,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.min.css"
           integrity="sha512-yVvxUQV0QESBt1SyZbNJMAwyKvFTLMyXSyBHDO4BG5t7k/Lw34tyqlSDlKIrIENIzCl+RVUNjmCPG+V/GMesRw=="
           crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>BJS Rechner</title>
     <script src="https://unpkg.com/pdf-lib@1.4.0"></script>
     <script src="https://unpkg.com/downloadjs@1.4.7"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body id="body">
 <div class="calc-container">
@@ -118,9 +118,10 @@
             </tr>
             </tbody>
         </table>
-        <p>Summe der Punkte: <span id="points">0</span></p>
+        <p>Summe der Punkte: <span id="points" class="reset">0</span></p>
         <label for="age">Alter: </label>
         <select id="age">
+            <option value="null">Jahre</option>
             <option value="8">8</option>
             <option value="9">9</option>
             <option value="10">10</option>
@@ -140,6 +141,7 @@
     </div>
 </div>
 <div class="list">
+    <button onclick="sendResults()" id="save">Save</button>
     <button onclick="createPdf()" id="pdf">PDF</button>
     <table>
         <thead>
@@ -153,8 +155,8 @@
     </table>
 </div>
 <span style="position: absolute; bottom: 5px; right: 5px;">
-    <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis/bjs-calc">1.1</a>
-    <span style="color: #989898">(16.7.23 von <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis">Sebi</a>)</span></span>
-<script type="text/javascript" src="js/index.js"></script>
+    <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis/bjs-calc">2.0b</a>
+    <span style="color: #989898">(von <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis">Sebi</a>)</span></span>
+<script type="application/javascript" src="js/index.js"></script>
 </body>
 </html>

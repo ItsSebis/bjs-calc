@@ -1,3 +1,6 @@
+// init server connection
+const socket = io();
+
 // two genders
 let gender = true
 
@@ -112,6 +115,12 @@ document.getElementById("addBtn").onclick = function () {
         }
     }
     const uid = document.getElementById("uid").value;
+    let neededPoints
+    if (gender) {
+        neededPoints = ACs.girl.certificates[document.getElementById("age").value].e
+    } else {
+        neededPoints = ACs.boy.certificates[document.getElementById("age").value].e
+    }
     allList[uid] = {
         points: {
             sum: Number(document.getElementById("points").innerText),
@@ -126,7 +135,10 @@ document.getElementById("addBtn").onclick = function () {
             jump: Number(document.getElementById("jumpM").value),
             ball: Number(document.getElementById("ballM").value),
         },
-        cert: document.getElementById("cert").innerText.split(" ")[0]
+        cert: {
+            name: document.getElementById("cert").innerText.split(" ")[0],
+            needed: neededPoints
+        }
     }
     for (const points of document.getElementsByClassName("reset")) {
         points.innerHTML = "0";
@@ -180,6 +192,10 @@ async function createPdf(){
         div.style.display = "none"
     }
     document.getElementById("body").appendChild(iframe)
+}
+
+function sendResults() {
+    socket.emit('commit', allList)
 }
 
 function genderSwap() {
@@ -249,7 +265,7 @@ function calcList() {
         let row = document.createElement("TR")
         row.innerHTML = "<td style=\"max-width: 150px\">" + uid + "</td>\n" +
             "<td>" + allList[uid].points.sum + "</td>\n" +
-            "<td>" + allList[uid].cert + "</td>"
+            "<td>" + allList[uid].cert.name + "</td>"
         document.getElementById("listBody").append(row)
     }
 }

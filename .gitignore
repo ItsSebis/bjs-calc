@@ -1,1 +1,4 @@
 .idea
+package-lock.json
+notes.md
+node_modules

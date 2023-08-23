@@ -23,11 +23,11 @@
 <body id="body">
 <div class="calc-container">
     <div class="points-container">
-        <h1><a href="javascript:genderSwap();" id="gender" style="font-size: inherit; color: green">Mädchen</a> Rechner</h1>
+        <h1><a href="javascript:genderSwap();" id="gender" style="font-size: inherit; color: green">Mädchen</a> <span class="resetBtn" onclick="resetCalc()">Rechner</span> <span id="group"></span></h1>
         <table class="calc sprint" id="sprint">
             <tbody>
             <tr>
-                <th rowspan="2" class="hD">Sprint</th>
+                <th rowspan="2" class="hD"><span class="resetBtn" onclick="resetDicp('sprint')">Sprint</span></th>
                 <th>Zeit</th>
                 <th>Distanz</th>
                 <th style="width: 100px">Punkte</th>
@@ -51,7 +51,7 @@
         <table class="calc run" id="run">
             <tbody>
             <tr>
-                <th rowspan="2" class="hD">Lauf</th>
+                <th rowspan="2" class="hD"><span class="resetBtn" onclick="resetDicp('run')">Lauf</span></th>
                 <th>Zeit</th>
                 <th>Distanz</th>
                 <th style="width: 100px">Punkte</th>
@@ -75,7 +75,7 @@
         <table class="calc jump" id="jump">
             <tbody>
             <tr>
-                <th rowspan="2" class="hD">Sprung</th>
+                <th rowspan="2" class="hD"><span class="resetBtn" onclick="resetDicp('jump')">Sprung</span></th>
                 <th>Weite</th>
                 <th>Art</th>
                 <th style="width: 100px">Punkte</th>
@@ -97,7 +97,7 @@
         <table class="calc ball" id="ball">
             <tbody>
             <tr>
-                <th rowspan="2" class="hD">Wurf/Stoß</th>
+                <th rowspan="2" class="hD"><span class="resetBtn" onclick="resetDicp('ball')">Wurf/Stoß</span></th>
                 <th>Weite</th>
                 <th>Art</th>
                 <th style="width: 100px">Punkte</th>
@@ -119,21 +119,21 @@
             </tbody>
         </table>
         <p>Summe der Punkte: <span id="points" class="reset">0</span></p>
-        <label for="age">Alter: </label>
+        <label for="age">Jahrgang: </label>
         <select id="age">
-            <option value="null">Jahre</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-            <option value="11">11</option>
-            <option value="12">12</option>
-            <option value="13">13</option>
-            <option value="14">14</option>
-            <option value="15">15</option>
-            <option value="16">16</option>
-            <option value="17">17</option>
-            <option value="18">18</option>
-            <option value="19">19+</option>
+            <option value="null">Wählen</option>
+<!--            <option value="8">8</option>-->
+<!--            <option value="9">9</option>-->
+<!--            <option value="10">10</option>-->
+<!--            <option value="11">11</option>-->
+<!--            <option value="12">12</option>-->
+<!--            <option value="13">13</option>-->
+<!--            <option value="14">14</option>-->
+<!--            <option value="15">15</option>-->
+<!--            <option value="16">16</option>-->
+<!--            <option value="17">17</option>-->
+<!--            <option value="18">18</option>-->
+<!--            <option value="19">19+</option>-->
         </select><br>
         <span id="cert" style="font-size: 1.5rem">Keine Eingabe</span><br>
         <input type="text" id="uid" placeholder="UID..." style="width: 400px; margin: 10px"><br>
@@ -141,8 +141,8 @@
     </div>
 </div>
 <div class="list">
-    <button onclick="sendResults()" id="save">Save</button>
-    <button onclick="createPdf()" id="pdf">PDF</button>
+    <button onclick="createAllPdf()" id="pdf">PDF</button>
+    <button onclick="loadList()" id="load">Load</button>
     <table>
         <thead>
         <tr>
@@ -155,8 +155,23 @@
     </table>
 </div>
 <span style="position: absolute; bottom: 5px; right: 5px;">
-    <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis/bjs-calc">2.0b</a>
-    <span style="color: #989898">(von <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis">Sebi</a>)</span></span>
+    <a style="color: inherit" target="_blank" href="https://github.com/StormarnSozial/bjs-calc/tree/v2.0-pre">Pre2.0</a>
+    <span style="color: #989898">(von <a style="color: inherit" target="_blank" href="https://github.com/ItsSebis">Sebi</a>)</span>
+</span>
+<script type="application/javascript">
+    for (let i = 8; i <= 18; i++) {
+        const ageOption = document.createElement('option')
+        ageOption.value = i.toString()
+        const date = new Date()
+        ageOption.innerText = (date.getFullYear()-i).toString()
+        document.getElementById('age').appendChild(ageOption)
+    }
+    const ageOption = document.createElement('option')
+    ageOption.value = "19"
+    const date = new Date()
+    ageOption.innerText = "vor "+(date.getFullYear()-18)
+    document.getElementById('age').appendChild(ageOption)
+</script>
 <script type="application/javascript" src="js/index.js"></script>
 </body>
 </html>

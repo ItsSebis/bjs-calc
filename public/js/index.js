@@ -5,7 +5,22 @@ const socket = io();
 let gender = true
 
 // lists
-let allList = {}
+let allList = {
+    group: prompt("Welche Gruppe bearbeiten Sie?")
+}
+socket.emit('edit', allList.group)
+socket.on('setList', (originList) => {
+    console.log(originList)
+    allList = originList
+    document.getElementById('group').innerText = allList.group
+    calcList()
+    sendResults()
+})
+
+let lists
+socket.on('lists', (backLists) => {
+    lists = backLists
+})
 
 // pdf
 const { PDFDocument, StandardFonts, rgb } = PDFLib;
@@ -89,7 +104,7 @@ let ACs = {
 // code
 document.getElementById("age").onchange = function () {addPoints();}
 document.getElementById("addBtn").onclick = function () {
-    if (document.getElementById("uid").value === "" || allList[document.getElementById("uid").value] !== undefined ||
+    if (document.getElementById("uid").value === "" ||
         document.getElementById("uid").value.match(/[^A-Za-z0-9 ]/)) {
         alert("Gib bitte einen einzigartigen Identifikator aus Buchstaben und Zahlen an!")
         return
@@ -101,6 +116,12 @@ document.getElementById("addBtn").onclick = function () {
     if (document.getElementById("age").value === "null") {
         alert("Gib bitte ein Alter an!")
         return;
+    }
+    if (allList[document.getElementById("uid").value] !== undefined) {
+        const rs = confirm("Diese ID ist bereits vergeben!\nWenn Sie fortfahren werden die aktuellen Werte überschrieben!")
+        if (!rs) {
+            return;
+        }
     }
     if (
         // not all disciplines given
@@ -121,6 +142,10 @@ document.getElementById("addBtn").onclick = function () {
     } else {
         neededPoints = ACs.boy.certificates[document.getElementById("age").value].e
     }
+    const types = []
+    for (const type of document.getElementsByClassName("active")) {
+        types[types.length] = type.id
+    }
     allList[uid] = {
         points: {
             sum: Number(document.getElementById("points").innerText),
@@ -134,35 +159,85 @@ document.getElementById("addBtn").onclick = function () {
             run: Number(document.getElementById('runMin').value*60)+Number(document.getElementById('runSec').value),
             jump: Number(document.getElementById("jumpM").value),
             ball: Number(document.getElementById("ballM").value),
+            types: types
         },
         cert: {
             name: document.getElementById("cert").innerText.split(" ")[0],
-            needed: neededPoints
+            needed: neededPoints,
+            age: document.getElementById("age").value,
+            gender: gender
         }
     }
+    resetCalc()
+    calcList()
+    sendResults()
+}
+
+// functions
+
+function resetCalc() {
     for (const points of document.getElementsByClassName("reset")) {
         points.innerHTML = "0";
     }
     for (const value of document.getElementsByTagName("input")) {
         value.value = ""
     }
-    for (const value of document.getElementsByClassName("active")) {
-        value.classList.remove("active")
+    while (document.getElementsByClassName("active").length > 0) {
+        for (const value of document.getElementsByClassName("active")) {
+            value.classList.remove("active")
+        }
     }
     document.getElementById("cert").innerText = "Keine Eingabe"
     document.getElementById("age").value = "null"
-    calcList()
 }
 
-// functions
+function resetDicp(dicp) {
+    const doc = document.getElementById(dicp)
+    for (const reset of doc.getElementsByClassName("reset")) {
+        reset.innerHTML = "0"
+    }
+    for (const reset of doc.getElementsByClassName("active")) {
+        reset.classList.remove("active")
+    }
+    for (const value of doc.getElementsByTagName("input")) {
+        value.value = ""
+    }
+    addPoints()
+}
 
-async function createPdf(){
-    const pdfDoc = await PDFDocument.create()
-    const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman)
-
+async function createAllPdf(){
+    // sort in certs
+    const honor = {}
+    const winner = {}
+    const finisher = {}
     for (const uid in allList) {
+        if (uid === "group") {
+            continue
+        }
+        const data = allList[uid]
+        console.log(data)
+        if (data.cert.name === "Ehrenurkunde") {
+            honor[uid] = data
+        } else if (data.cert.name === "Siegerurkunde") {
+            winner[uid] = data
+        } else {
+            finisher[uid] = data
+        }
+    }
+
+    const honorPdf = await PDFDocument.create()
+    const winnerPdf = await PDFDocument.create()
+    const finisherPdf = await PDFDocument.create()
+    const timesRomanFontH = await honorPdf.embedFont(StandardFonts.TimesRoman)
+    const timesRomanFontW = await winnerPdf.embedFont(StandardFonts.TimesRoman)
+    const timesRomanFontF = await finisherPdf.embedFont(StandardFonts.TimesRoman)
+
+    for (const uid in honor) {
+        if (uid === "group") {
+            continue
+        }
         const data = allList[uid];
-        const page = pdfDoc.addPage()
+        const page = honorPdf.addPage()
         const { width, height } = page.getSize()
         console.log(width + " " + height)
         const fontSize = 18
@@ -170,32 +245,173 @@ async function createPdf(){
             x: width/2,
             y: height/2-100,
             size: fontSize,
-            font: timesRomanFont,
+            font: timesRomanFontH,
             color: rgb(0, 0, 0),
         })
         page.drawText(String(data.points.sum), {
             x: 300,
             y: 500,
             size: 14,
-            font: timesRomanFont,
+            font: timesRomanFontH,
             color: rgb(0,0,0)
         })
     }
 
-    //const pdfBytes = await pdfDoc.save()
-    const pdfDataUri = await pdfDoc.saveAsBase64({ dataUri: true });
-    const iframe = document.createElement("iframe")
-    iframe.src = pdfDataUri
-    iframe.setAttribute("width", String(window.innerWidth-50));
-    iframe.setAttribute("height", String(window.innerHeight-50));
+    for (const uid in winner) {
+        if (uid === "group") {
+            continue
+        }
+        const data = allList[uid];
+        const page = winnerPdf.addPage()
+        const { width, height } = page.getSize()
+        console.log(width + " " + height)
+        const fontSize = 18
+        page.drawText(uid, {
+            x: width/2,
+            y: height/2-100,
+            size: fontSize,
+            font: timesRomanFontW,
+            color: rgb(0, 0, 0),
+        })
+        page.drawText(String(data.points.sum), {
+            x: 300,
+            y: 500,
+            size: 14,
+            font: timesRomanFontW,
+            color: rgb(0,0,0)
+        })
+    }
+
+    for (const uid in finisher) {
+        if (uid === "group") {
+            continue
+        }
+        const data = allList[uid];
+        const page = finisherPdf.addPage()
+        const { width, height } = page.getSize()
+        console.log(width + " " + height)
+        const fontSize = 18
+        page.drawText(uid, {
+            x: width/2,
+            y: height/2-100,
+            size: fontSize,
+            font: timesRomanFontF,
+            color: rgb(0, 0, 0),
+        })
+        page.drawText(String(data.points.sum), {
+            x: 300,
+            y: 500,
+            size: 14,
+            font: timesRomanFontF,
+            color: rgb(0,0,0)
+        })
+    }
+
     for (const div of document.getElementById("body").getElementsByTagName("div")) {
         div.style.display = "none"
     }
-    document.getElementById("body").appendChild(iframe)
+    document.getElementById('body').style.overflowY = "scroll"
+
+    const certs = [honorPdf, winnerPdf, finisherPdf]
+
+    for (const certType of certs) {
+        let pdfDataUri = await certType.saveAsBase64({ dataUri: true });
+        const iframe = document.createElement("iframe")
+        iframe.src = pdfDataUri
+        iframe.setAttribute("width", String(window.innerWidth-50));
+        iframe.setAttribute("height", String(window.innerHeight-50));
+        document.getElementById("body").appendChild(iframe)
+    }
 }
 
 function sendResults() {
     socket.emit('commit', allList)
+}
+
+function loadList() {
+    if (document.getElementsByClassName('lists').length > 0) {
+        document.getElementsByClassName('lists')[0].remove()
+        return
+    }
+    const listEmt = document.createElement('div')
+    listEmt.classList.add("lists")
+    const table = document.createElement('table')
+    const tbody = document.createElement('tbody')
+    tbody.innerHTML = "<tr class='head'><th>Name</th><th>Einträge</th></tr>"
+    for (const group in lists) {
+        const groupRow = document.createElement('tr')
+        groupRow.onclick = function () {
+            socket.emit('edit', group)
+            document.getElementsByClassName('lists')[0].remove()
+        }
+
+        const nameTab = document.createElement('td')
+        const countTab = document.createElement('td')
+        nameTab.innerText = group
+        countTab.innerText = lists[group]
+        groupRow.appendChild(nameTab)
+        groupRow.appendChild(countTab)
+        tbody.appendChild(groupRow)
+    }
+    const createRow = document.createElement('tr')
+    createRow.onclick = function () {
+        socket.emit('edit', prompt("Wie soll die Gruppe heißen?"))
+        document.getElementsByClassName('lists')[0].remove()
+    }
+    const createTd = document.createElement('td')
+    createTd.colSpan = 2
+    createTd.innerText = "Create New/Open"
+    createRow.appendChild(createTd)
+    tbody.appendChild(createRow)
+
+    table.appendChild(tbody)
+    listEmt.appendChild(table)
+    document.getElementById('body').appendChild(listEmt)
+}
+
+function removeUid(uid) {
+    delete allList[uid]
+    calcList()
+    sendResults()
+}
+
+function loadUid(uid) {
+    // restore type of diciplines
+    while (document.getElementsByClassName("active").length > 0) {
+        for (const value of document.getElementsByClassName("active")) {
+            value.classList.remove("active")
+        }
+    }
+    const data = allList[uid]
+    for (const type of data.values.types) {
+        document.getElementById(type).classList.add("active")
+    }
+
+    // restore gender
+    if (gender !== data.cert.gender) {
+        genderSwap()
+    }
+
+    // restore points
+    document.getElementById("sprintPoints").innerText = data.points.sprint.toString()
+    document.getElementById("runPoints").innerText = data.points.run.toString()
+    document.getElementById("jumpPoints").innerText = data.points.jump.toString()
+    document.getElementById("ballPoints").innerText = data.points.ball.toString()
+    document.getElementById("points").innerText = data.points.sum.toString()
+
+    // restore values
+    document.getElementById("sprintSec").value = data.values.sprint.toString()
+    document.getElementById("runMin").value = Math.floor(data.values.run/60).toString()
+    document.getElementById("runSec").value = (data.values.run%60).toString()
+    document.getElementById("jumpM").value = data.values.jump.toString()
+    document.getElementById("ballM").value = data.values.ball.toString()
+
+    // restore age
+    document.getElementById("age").value = data.cert.age
+
+    // restore uid
+    document.getElementById("uid").value = uid
+    addPoints();
 }
 
 function genderSwap() {
@@ -213,6 +429,10 @@ function genderSwap() {
     }
     document.getElementById("gender").innerText = gString
     document.getElementById("gender").style.color = gColor
+    for (const dicp of document.getElementsByClassName("active")) {
+        dicp.click()
+    }
+    addPoints()
 }
 
 function addPoints() {
@@ -260,12 +480,20 @@ function calcCert(points) {
 }
 
 function calcList() {
+    document.getElementById("listBody").innerHTML = ""
     for (const uid in allList) {
+        if (uid === "group") {
+            continue
+        }
         console.log(allList[uid])
         let row = document.createElement("TR")
+        row.onclick = function () {
+            loadUid(uid)
+        }
         row.innerHTML = "<td style=\"max-width: 150px\">" + uid + "</td>\n" +
             "<td>" + allList[uid].points.sum + "</td>\n" +
-            "<td>" + allList[uid].cert.name + "</td>"
+            "<td>" + allList[uid].cert.name + "</td>" +
+            "<td><button title='Remove' class='rmBtn' onclick='removeUid(\"" + uid + "\")' value='" + uid + "'>❌</button></td>"
         document.getElementById("listBody").append(row)
     }
 }

@@ -7,7 +7,9 @@ body {
     background-color: #fdfdfd;
     height: 100%;
     width: 100%;
-    overflow-x: hidden;}
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
 
 input {
     outline: none;
@@ -31,9 +33,16 @@ a {
     text-decoration: none;
     line-height: 30px;
 }
-
 a:hover {
     text-decoration: underline;
+}
+
+#group {
+    color: lime;
+}
+
+.resetBtn {
+    cursor: not-allowed;
 }
 
 .hD {
@@ -69,7 +78,7 @@ a:hover {
 }
 
 .list {
-    width: 400px;
+    width: 550px;
     position: absolute;
     right: 10px;
     top: 10px;
@@ -81,16 +90,18 @@ a:hover {
 
 .list table {
     margin: 0 auto;
-    width: 280px;
+    width: 100%;
 }
 
 .list table tr {
     line-height: 25px;
     font-size: 1.3rem;
+    cursor: alias;
 }
 
 .list table tr td {
     padding: 10px;
+    overflow-x: hidden;
 }
 
 .list table tbody tr:nth-child(even) {
@@ -103,4 +114,44 @@ a:hover {
 
 a.active {
     color: aqua;
+}
+
+.lists {
+    width: 400px;
+    height: 900px;
+    position: absolute;
+    top: 50%;
+    left: 30%;
+    transform: translate(-30%, -50%);
+    background-color: #454545;
+    border: solid #454545;
+    border-radius: 15px;
+    padding: 15px;
+    font-size: 1.2rem;
+}
+
+.lists table {
+    color: white;
+    width: 100%;
+    font-size: 1.2rem;
+}
+
+.lists table tbody tr {
+    cursor: pointer;
+}
+
+.lists table tbody tr.head{
+    cursor: auto;
+}
+
+.lists table tbody td, .lists table tbody th {
+    padding: 5px;
+}
+
+.lists table tbody tr:nth-child(even) {
+    background-color: #454545;
+}
+
+.lists table tbody tr:nth-child(odd) {
+    background-color: #232323;
 }

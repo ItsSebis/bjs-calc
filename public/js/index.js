@@ -8,6 +8,9 @@ let gender = true
 let allList = {
     group: prompt("Welche Gruppe bearbeiten Sie?")
 }
+while (allList.group === null || allList.group === "") {
+    allList.group = prompt("Welche Gruppe bearbeiten Sie?")
+}
 socket.emit('edit', allList.group)
 socket.on('setList', (originList) => {
     console.log(originList)
@@ -108,10 +111,6 @@ document.getElementById("addBtn").onclick = function () {
         document.getElementById("uid").value.match(/[^A-Za-z0-9 ]/)) {
         alert("Gib bitte einen einzigartigen Identifikator aus Buchstaben und Zahlen an!")
         return
-    }
-    if (Number(document.getElementById("points").innerText) === 0) {
-        alert("Gib bitte mindestens eine Disziplin an!")
-        return;
     }
     if (document.getElementById("age").value === "null") {
         alert("Gib bitte ein Alter an!")

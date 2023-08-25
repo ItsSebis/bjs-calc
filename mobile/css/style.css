@@ -1,0 +1,118 @@
+* {
+    font-family: "Open Sans", sans-serif;
+    text-align: center;
+}
+
+body {
+    background-color: #fdfdfd;
+    width: 100%;
+    margin: 0;
+}
+
+input {
+    outline: none;
+    font-size: 1.2rem;
+    width: 90px;
+    border: solid gray;
+    border-radius: 10px;
+}
+
+button {
+    outline: none;
+    font-size: 1.2rem;
+    border: solid gray;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+a {
+    font-size: 1.2rem;
+    color: lime;
+    text-decoration: none;
+    line-height: 30px;
+}
+a:hover {
+    text-decoration: underline;
+}
+a.active {
+    color: cyan;
+}
+
+.resetBtn {
+    cursor: not-allowed;
+}
+
+#menu-toggle {
+    cursor: pointer;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 30px;
+    font-weight: bold;
+}
+.menu {
+    float: left;
+    position: fixed;
+    transition: 0.5s ease-in-out;
+    background-color: #454545;
+    width: 0;
+    height: 100%;
+    overflow-x: hidden;
+}
+.menu.active {
+    width: 100%;
+}
+
+#disciplines {
+    margin-bottom: 20px;
+}
+
+.dispBtn {
+    font-size: 1.4rem;
+}
+.dispBtn.active {
+    background-color: #878787;
+}
+
+#groupTable {
+    width: 75%;
+    margin: 20px auto 0;
+    font-size: 24px;
+    color: #fdfdfd;
+}
+#groups tr {
+    cursor: pointer;
+}
+#groups tr:first-child {
+    cursor: auto;
+}
+#groups tr:nth-child(odd) {
+    background-color: #232323;
+}
+#groups tr.active {
+    cursor: auto;
+    color: #232323;
+    background-color: lightblue;
+}
+
+.main {
+    width: 100%;
+    margin: 0 auto;
+}
+.main table {
+    width: 75%;
+    margin: 0 auto;
+    font-size: 1.4rem;
+}
+.main table tr td, .main table tr th {
+    padding: 8px;
+}
+.main table tr th:first-child {
+    width: 55%;
+}
+.main table tr:nth-child(odd) {
+    background-color: #878787;
+}
+.main table tr:nth-child(even) {
+    background-color: #a0a0a0;
+}

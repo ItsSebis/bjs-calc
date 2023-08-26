@@ -31,6 +31,9 @@ socket.on('setList', (originList) => {
                 if (document.getElementById("setup") !== null && discipline !== "") {
                     document.getElementById("setup").remove()
                 }
+                if (discipline !== "") {
+                    document.getElementById("menu").classList.remove("active")
+                }
                 for (const activeGroup of document.getElementById("groups").getElementsByClassName("active")) {
                     activeGroup.removeAttribute("disabled")
                     activeGroup.classList.remove("active")
@@ -38,7 +41,6 @@ socket.on('setList', (originList) => {
                 row.setAttribute("disabled", "")
                 row.classList.add("active")
 
-                document.getElementById("menu").classList.remove("active")
                 while (document.getElementsByClassName("dataEntry").length > 0) {
                     for (const dataEntry of document.getElementsByClassName("dataEntry")) {
                         dataEntry.remove()
@@ -76,6 +78,9 @@ socket.on('setList', (originList) => {
             group.remove()
         }
     }
+})
+socket.on('kick', () => {
+    window.location.reload()
 })
 
 // ac consts
@@ -165,6 +170,9 @@ for (const dispBtn of document.getElementsByClassName("dispBtn")) {
         if (document.getElementById("setup") !== null && group !== "") {
             document.getElementById("setup").remove()
         }
+        if (group !== "") {
+            document.getElementById("menu").classList.remove("active")
+        }
         for (const activeBtn of document.getElementById("disciplines").getElementsByClassName("active")) {
             activeBtn.removeAttribute("disabled")
             activeBtn.classList.remove("active")
@@ -202,6 +210,43 @@ function loadDiscipline(disp) {
                     "<a href=\"javascript:sprintPoints('" + uid + "', document.getElementById('sprintSec" + uid + "').value, 50)\" class=\"sprint1\">50m</a><br>" +
                     "<a href=\"javascript:sprintPoints('" + uid + "', document.getElementById('sprintSec" + uid + "').value, 75)\" class=\"sprint2\">75m</a><br>" +
                     "<a href=\"javascript:sprintPoints('" + uid + "', document.getElementById('sprintSec" + uid + "').value, 100)\" class=\"sprint3\">100m</a><br>" +
+                    "</p>"
+                break
+            }
+            case "run": {
+                dataCol.innerHTML = "<p align=\"center\">" +
+                    "<input id=\"runMin" + uid + "\" type=\"number\" placeholder=\"0.00\" min=\"0\" value='" + Math.floor(lists[group][uid].values.run/60) + "'>" +
+                    "<br>min</p>" +
+                    "<p align=\"center\">" +
+                    "<input id=\"runSec" + uid + "\" type=\"number\" placeholder=\"0.00\" min=\"0\" value='" + (lists[group][uid].values.run%60) + "'>" +
+                    "<br>sek</p>"
+                typeCol.innerHTML = "<p align=\"center\">"
+                if (lists[group][uid].cert.gender) {
+                    typeCol.innerHTML = typeCol.innerHTML + "<a href=\"javascript:runPoints('" + uid + "', Number(document.getElementById('runMin" + uid + "').value*60)+Number(document.getElementById('runSec" + uid + "').value), 800)\" class=\"run1\">800m</a><br>"
+                } else {
+                    typeCol.innerHTML = typeCol.innerHTML + "<a href=\"javascript:runPoints('" + uid + "', Number(document.getElementById('runMin" + uid + "').value*60)+Number(document.getElementById('runSec" + uid + "').value), 1000)\" class=\"run1\">1000m</a><br>"
+                }
+                typeCol.innerHTML = typeCol.innerHTML +
+                    "<a href=\"javascript:runPoints('" + uid + "', Number(document.getElementById('runMin" + uid + "').value*60)+Number(document.getElementById('runSec" + uid + "').value), 2000)\" class=\"run2\">2000m</a><br>" +
+                    "<a href=\"javascript:runPoints('" + uid + "', Number(document.getElementById('runMin" + uid + "').value*60)+Number(document.getElementById('runSec" + uid + "').value), 3000)\" class=\"run3\">3000m</a><br>" +
+                    "</p>"
+                break
+            }
+            case "jump": {
+                dataCol.innerHTML = "<p align=\"center\"><input id=\"jumpM" + uid + "\" type=\"number\" step=\"0.01\" placeholder=\"0.00\" min=\"0\" value='" + lists[group][uid].values.jump + "'><br>m</p>"
+                typeCol.innerHTML = "<p align=\"center\">" +
+                    "<a href=\"javascript:jumpPoints('" + uid + "', document.getElementById('jumpM" + uid + "').value, 'highjump')\" class=\"jump1\">Hoch</a><br>" +
+                    "<a href=\"javascript:jumpPoints('" + uid + "', document.getElementById('jumpM" + uid + "').value, 'longjump')\" class=\"jump2\">Weit</a><br>" +
+                    "</p>"
+                break
+            }
+            case "ball": {
+                dataCol.innerHTML = "<p align=\"center\"><input id=\"ballM" + uid + "\" type=\"number\" step=\"0.01\" placeholder=\"0.00\" min=\"0\" value='" + lists[group][uid].values.ball + "'><br>m</p>"
+                typeCol.innerHTML = "<p align=\"center\">" +
+                    "<a href=\"javascript:ballPoints('" + uid + "', document.getElementById('ballM" + uid + "').value, 'Ball80G')\" class=\"ball1\">80g</a><br>" +
+                    "<a href=\"javascript:ballPoints('" + uid + "', document.getElementById('ballM" + uid + "').value, 'Ball200G')\" class=\"ball2\">200g</a><br>" +
+                    "<a href=\"javascript:ballPoints('" + uid + "', document.getElementById('ballM" + uid + "').value, 'shotput')\" class=\"ball3\">Kugel</a><br>" +
+                    "<a href=\"javascript:ballPoints('" + uid + "', document.getElementById('ballM" + uid + "').value, 'slingshot')\" class=\"ball4\">Schleuder</a><br>" +
                     "</p>"
                 break
             }
@@ -309,10 +354,10 @@ function sprintPoints(uid, sec, dist) {
     addPoints(uid);
 }
 
-function runPoints(sec, dist) {
+function runPoints(uid, sec, dist) {
     let points = 0
     let a,c,runId
-    if (gender) {
+    if (lists[group][uid].cert.gender) {
         a = ACs.girl.run[dist].a;
         c = ACs.girl.run[dist].c;
         runId = ACs.girl.run[dist].id
@@ -323,25 +368,45 @@ function runPoints(sec, dist) {
     }
     sec = Math.abs(sec);
     points = Math.round((dist / sec - a) / c);
-    console.log(sec + " " + dist + " " + a +" " + c)
     if (points <= 0 || points >= 1000) {
+        document.getElementById("runMin"+uid).value = Math.floor(lists[group][uid].values.run/60)
+        document.getElementById("runSec"+uid).value = lists[group][uid].values.run%60
         return;
     }
 
-    console.log(runId)
-    for (let discipline of document.getElementsByClassName("run")[0].getElementsByTagName("a")) {
+    if (lists[group][uid].cert.gender) {
+        runId = ACs.girl.run[dist].id
+    } else {
+        runId = ACs.boy.run[dist].id
+    }
+    console.log(runId + " | " + points)
+    for (let discipline of document.getElementById("data-"+uid).getElementsByTagName("a")) {
         discipline.classList.remove("active")
     }
-    document.getElementById(runId).classList.add("active")
+    document.getElementById("data-"+uid).getElementsByClassName(runId)[0].classList.add("active")
 
-    document.getElementById("runPoints").innerText = String(points)
-    addPoints();
+    lists[group][uid].points.run = points
+    lists[group][uid].values.run = sec
+
+    let include = false
+    for (const type of lists[group][uid].values.types) {
+        if (type.toString().includes("run")) {
+            lists[group][uid].values.types[lists[group][uid].values.types.indexOf(type)] = runId
+            include = true
+            break
+        }
+    }
+    if (!include) {
+        lists[group][uid].values.types[lists[group][uid].values.types.length] = runId
+    }
+    console.log(lists[group][uid].values.types)
+    addPoints(uid);
 }
 
-function jumpPoints(dist, type) {
+function jumpPoints(uid, dist, type) {
     let points = 0
     let a,c
-    if (gender) {
+    if (lists[group][uid].cert.gender) {
         a = ACs.girl.jump[type].a;
         c = ACs.girl.jump[type].c;
     } else {
@@ -350,26 +415,40 @@ function jumpPoints(dist, type) {
     }
     dist = Math.abs(dist);
     points = Math.round((Math.sqrt(dist) - a) / c);
-    console.log(points + " " + dist + " " + type)
     if (points <= 0 || points >= 1000) {
+        document.getElementById("jumpM"+uid).value = lists[group][uid].values.jump
         return;
     }
 
     let jumpId = ACs.girl.jump[type].id
-    console.log(jumpId)
-    for (let discipline of document.getElementsByClassName("jump")[0].getElementsByTagName("a")) {
+    console.log(jumpId + " | " + points)
+    for (let discipline of document.getElementById("data-"+uid).getElementsByTagName("a")) {
         discipline.classList.remove("active")
     }
-    document.getElementById(jumpId).classList.add("active")
+    document.getElementById("data-"+uid).getElementsByClassName(jumpId)[0].classList.add("active")
 
-    document.getElementById("jumpPoints").innerText = String(points)
-    addPoints();
+    lists[group][uid].points.jump = points
+    lists[group][uid].values.jump = dist
+
+    let include = false
+    for (const type of lists[group][uid].values.types) {
+        if (type.toString().includes("jump")) {
+            lists[group][uid].values.types[lists[group][uid].values.types.indexOf(type)] = jumpId
+            include = true
+            break
+        }
+    }
+    if (!include) {
+        lists[group][uid].values.types[lists[group][uid].values.types.length] = jumpId
+    }
+    console.log(lists[group][uid].values.types)
+    addPoints(uid);
 }
 
-function ballPoints(dist, type) {
+function ballPoints(uid, dist, type) {
     let points = 0
     let a,c
-    if (gender) {
+    if (lists[group][uid].cert.gender) {
         a = ACs.girl.ball[type].a;
         c = ACs.girl.ball[type].c;
     } else {
@@ -379,16 +458,31 @@ function ballPoints(dist, type) {
     dist = Math.abs(dist);
     points = Math.round((Math.sqrt(dist) - a) / c);
     if (points <= 0 || points >= 1000) {
+        document.getElementById("ballM"+uid).value = lists[group][uid].values.ball
         return;
     }
 
     let ballId = ACs.girl.ball[type].id
-    console.log(ballId)
-    for (let discipline of document.getElementsByClassName("ball")[0].getElementsByTagName("a")) {
+    console.log(ballId + " | " + points)
+    for (let discipline of document.getElementById("data-"+uid).getElementsByTagName("a")) {
         discipline.classList.remove("active")
     }
-    document.getElementById(ballId).classList.add("active")
+    document.getElementById("data-"+uid).getElementsByClassName(ballId)[0].classList.add("active")
 
-    document.getElementById("ballPoints").innerText = String(points)
-    addPoints();
+    lists[group][uid].points.ball = points
+    lists[group][uid].values.ball = dist
+
+    let include = false
+    for (const type of lists[group][uid].values.types) {
+        if (type.toString().includes("ball")) {
+            lists[group][uid].values.types[lists[group][uid].values.types.indexOf(type)] = ballId
+            include = true
+            break
+        }
+    }
+    if (!include) {
+        lists[group][uid].values.types[lists[group][uid].values.types.length] = ballId
+    }
+    console.log(lists[group][uid].values.types)
+    addPoints(uid);
 }

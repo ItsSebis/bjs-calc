@@ -51,9 +51,10 @@ a.active {
     font-weight: bold;
 }
 .menu {
+    opacity: 0;
     float: left;
     position: fixed;
-    transition: 0.5s ease-in-out;
+    transition: 0.2s ease-in-out;
     background-color: #454545;
     width: 0;
     height: 100%;
@@ -61,6 +62,7 @@ a.active {
 }
 .menu.active {
     width: 100%;
+    opacity: 100;
 }
 
 #disciplines {
@@ -79,6 +81,9 @@ a.active {
     margin: 20px auto 0;
     font-size: 24px;
     color: #fdfdfd;
+    border: 3px solid #232323;
+    border-radius: 7px;
+    background-color: #232323;
 }
 #groups tr {
     cursor: pointer;
@@ -86,13 +91,17 @@ a.active {
 #groups tr:first-child {
     cursor: auto;
 }
-#groups tr:nth-child(odd) {
-    background-color: #232323;
+#groups tr:nth-child(even) {
+    background-color: #444444;
 }
 #groups tr.active {
     cursor: auto;
     color: #232323;
     background-color: lightblue;
+}
+#groups tr th, #groups tr td {
+    margin: 0;
+    padding: 0;
 }
 
 .main {

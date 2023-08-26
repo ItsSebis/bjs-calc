@@ -78,8 +78,6 @@ mo.on('connection', (socket) => {
             socketGroups[group] = socket.id
             sockets[socket.id] = group
         }
-        console.log(sockets)
-        console.log(socketGroups)
     })
 
     socket.on('commit', (groupList) => {
@@ -91,7 +89,7 @@ mo.on('connection', (socket) => {
         exportToFile()
     })
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', () => {
         delete socketGroups[sockets[socket.id]]
         delete sockets[socket.id]
     })

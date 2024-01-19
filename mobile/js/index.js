@@ -182,6 +182,7 @@ for (const dispBtn of document.getElementsByClassName("dispBtn")) {
         loadDiscipline(discipline)
     }
 }
+socket.emit("authenticate", (prompt("Password")))
 
 // functions
 

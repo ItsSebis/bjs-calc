@@ -12,6 +12,11 @@ const mobileServer = http.createServer(mobileBackend)
 const io = new Server(server, {pingInterval: 1500, pingTimeout: 5000})
 const mo = new Server(mobileServer, {pingInterval: 1500, pingTimeout: 5000})
 
+const readline = require('readline').createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
 backend.use(express.static("./public"))
 backend.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html')
@@ -22,7 +27,12 @@ mobileBackend.get('/', (req, res) => {
 });
 
 // init vars
+let passwords = {
+    calc: "",
+    mobile: ""
+}
 let lists = {}
+let calcSock = {}
 let sockets = {}
 let socketGroups = {}
 
@@ -32,14 +42,21 @@ fs.readFile('./data.json', 'utf8', (err, data) => {
         console.log("Restored lists")
     }
 })
+fs.readFile('./pass.json', 'utf8', (err, data) => {
+    if (!err) {
+        passwords = JSON.parse(data)
+        console.log("Restored lists")
+    }
+})
 
 // code
 io.on('connection', (socket) => {
     // client connected
-    console.log("Client connected: " + socket.id)
+    //console.log("Client connected: " + socket.id)
     // get group data if any
+    calcSock[socket.id] = false
     socket.on('edit', (socketGroup) => {
-        console.log(socket.id + " requests group " + socketGroup)
+        //console.log(socket.id + " requests group " + socketGroup)
         if (lists[socketGroup] !== undefined) {
             socket.emit('setList', lists[socketGroup])
         } else {
@@ -60,16 +77,16 @@ io.on('connection', (socket) => {
             listOfLists[list] = Object.keys(lists[list]).length-1
         }
         io.emit('lists', listOfLists)
-        console.log(socket.id + "'s list saved")
+        //console.log(socket.id + "'s list saved")
     })
 })
 mo.on('connection', (socket) => {
     // mobile client connected
-    console.log("Mobile client connected: " + socket.id)
+    //console.log("Mobile client connected: " + socket.id)
     sockets[socket.id] = null
     // client select group
     socket.on('selectGroup', (group) => {
-        console.log(socket.id + " requests group " + group)
+        //console.log(socket.id + " requests group " + group)
         if (sockets[socket.id] !== null) {
             delete socketGroups[sockets[socket.id]]
             sockets[socket.id] = null
@@ -98,6 +115,12 @@ mo.on('connection', (socket) => {
 function exportToFile() {
     const jsonData = JSON.parse(JSON.stringify(lists))
     fs.writeFile('./data.json', JSON.stringify(jsonData), err => {
+        if (err) {
+            console.error(err)
+        }
+    })
+    const passData = JSON.parse(JSON.stringify(passwords))
+    fs.writeFile('./pass.json', JSON.stringify(passData), err => {
         if (err) {
             console.error(err)
         }
@@ -194,6 +217,34 @@ async function calcWinners() {
     }, 1000)
 }
 
+function serverConsole() {
+    readline.question("> ", cmd => {
+        //console.log("Server: " + cmd)
+        // command input
+        const args = cmd.split(" ")
+        switch (args[0]) {
+            case "mobiles": {
+                console.log("Registered mobile clients:")
+                for (const mobile in sockets) {
+                    console.log(mobile + ": " + sockets[mobile])
+                }
+                break
+            }
+            case "calcs": {
+                console.log("Registered calculator clients:")
+                for (const calc in calcSock) {
+                    console.log(calc + ": " + calcSock[calc])
+                }
+                break
+            }
+            default: {
+                console.log(args[0] + " is not a valid command!")
+            }
+        }
+        serverConsole()
+    })
+}
+
 // listen
 server.listen(port, "0.0.0.0", () => {
     console.log(`Listening for connections on ${port}`)
@@ -203,3 +254,6 @@ mobileServer.listen(mobilePort, "0.0.0.0", () => {
 })
 
 calcWinners().then()
+setTimeout(() => {
+    serverConsole()
+}, 100)

@@ -10,16 +10,16 @@ const port = 1871
 const mobilePort = 1872
 const http = require('http')
 const { Server } = require('socket.io')
-const trace_events = require("trace_events");
 const server = http.createServer(backend)
 const mobileServer = http.createServer(mobileBackend)
 const io = new Server(server, {pingInterval: 1500, pingTimeout: 5000})
 const mo = new Server(mobileServer, {pingInterval: 1500, pingTimeout: 5000})
 
-const readline = require('readline').createInterface({
+const readlineSystem = require('readline').createInterface({
     input: process.stdin,
     output: process.stdout
 });
+const readline = require('readline')
 
 backend.use(express.static("./public"))
 backend.get('/', (req, res) => {
@@ -98,6 +98,7 @@ io.on('connection', (socket) => {
             listOfLists[list] = Object.keys(lists[list]).length-1
         }
         io.emit('lists', listOfLists)
+        mo.emit('setList', lists)
         //console.log(socket.id + "'s list saved")
     })
 })
@@ -105,6 +106,7 @@ mo.on('connection', (socket) => {
     // mobile client connected
     //console.log("Mobile client connected: " + socket.id)
     sockets[socket.id] = null
+    socket.emit('setList', lists)
     // client select group
     socket.on('selectGroup', (group) => {
         //console.log(socket.id + " requests group " + group)
@@ -124,6 +126,7 @@ mo.on('connection', (socket) => {
             return
         }
         lists[sockets[socket.id]] = groupList
+        mo.emit('setList', lists)
         exportToFile()
     })
 
@@ -235,7 +238,7 @@ async function calcWinners() {
             tmpLists[group] = lists[group]
         }
     }
-    mo.emit('setList', tmpLists)
+    //mo.emit('setList', tmpLists)
 
     setTimeout(() => {
         calcWinners()
@@ -243,11 +246,95 @@ async function calcWinners() {
 }
 
 function serverConsole() {
-    readline.question("> ", cmd => {
+    readlineSystem.question("> ", cmd => {
         //console.log("Server: " + cmd)
         // command input
         const args = cmd.split(" ")
         switch (args[0]) {
+            case "import": {
+                // import Data from csv
+                if (fs.existsSync('./import.csv')) {
+                    console.log("Starting import...")
+                    const startTime = Date.now()
+
+                    // specify the path of the CSV file
+                    const path = "import.csv";
+
+                    // Create a read stream
+                    const readStream = fs.createReadStream(path);
+
+                    // Create a readline interface
+                    const readInterface = readline.createInterface({
+                        input: readStream
+                    });
+
+                    // Initialize an array to store the parsed data
+                    let lineNumber = 0
+
+                    // Event handler for reading lines
+                    readInterface.on("line", (line) => {
+                        const row = line.split(";");
+                        if (lineNumber > 0) {
+                            // error catching
+                            if (
+                                row.length < 4 ||
+                                row[0].match(/[^A-Za-z0-9 ]/) ||
+                                isNaN(Number(row[1])) ||
+                                !row[3].match(/[MWmw]/)
+                            ) {
+                                console.log("Line " + lineNumber + " is not formatted correctly!")
+                            } else {
+                                if (lists[row[2]] === undefined) {
+                                    lists[row[2]] = {}
+                                }
+                                if (lists[row[2]][row[0]] === undefined) {
+                                    lists[row[2]][row[0]] = {}
+                                    lists[row[2]][row[0]].group = row[2]
+                                    lists[row[2]][row[0]].cert = {
+                                        age: row[1],
+                                        gender: row[3].toLowerCase() === "w",
+                                        name: "DnS",
+                                        needed: 1000
+                                    }
+                                    lists[row[2]][row[0]].points = {
+                                        sum: 0,
+                                        sprint: 0,
+                                        run: 0,
+                                        jump: 0,
+                                        ball: 0
+                                    }
+                                    lists[row[2]][row[0]].values = {
+                                        sprint: 0,
+                                        run: 0,
+                                        jump: 0,
+                                        ball: 0,
+                                        types: []
+                                    }
+                                }
+                                console.log(lineNumber + ": " + row[0] + " in group " + row[2])
+                            }
+                        }
+                        lineNumber++
+                    });
+
+                    // Event handler for the end of file
+                    readInterface.on("close", () => {
+                        const stopTime = Date.now()
+                        console.log("Finished import in " + (stopTime-startTime) + "ms");
+                        fs.renameSync('./import.csv', './import-' + Date.now() + ".csv")
+                    });
+
+                    // Event handler for handling errors
+                    readInterface.on("error", (err) => {
+                        console.error("Error reading the CSV file:", err);
+                    });
+
+                    exportToFile()
+                } else {
+                    console.log("Couldn't find import.csv file in directory.")
+                }
+                break
+            }
             case "mobiles": {
                 console.log("Registered mobile clients:")
                 for (const mobile in sockets) {
@@ -283,6 +370,13 @@ function serverConsole() {
             }
             case "getHashes": {
                 console.log(passwords)
+                break
+            }
+            case "lists": {
+                console.log(lists)
+                break
+            }
+            case "": {
                 break
             }
             default: {

@@ -337,6 +337,17 @@ function loadList() {
     const table = document.createElement('table')
     const tbody = document.createElement('tbody')
     tbody.innerHTML = "<tr class='head'><th>Name</th><th>Einträge</th></tr>"
+    const createRow = document.createElement('tr')
+    createRow.onclick = function () {
+        socket.emit('edit', prompt("Wie soll die Gruppe heißen?"))
+        document.getElementsByClassName('lists')[0].remove()
+    }
+    const createTd = document.createElement('td')
+    createTd.colSpan = 2
+    createTd.innerText = "Create New/Open"
+    createRow.appendChild(createTd)
+    tbody.appendChild(createRow)
+
     for (const group in lists) {
         const groupRow = document.createElement('tr')
         groupRow.onclick = function () {
@@ -352,16 +363,6 @@ function loadList() {
         groupRow.appendChild(countTab)
         tbody.appendChild(groupRow)
     }
-    const createRow = document.createElement('tr')
-    createRow.onclick = function () {
-        socket.emit('edit', prompt("Wie soll die Gruppe heißen?"))
-        document.getElementsByClassName('lists')[0].remove()
-    }
-    const createTd = document.createElement('td')
-    createTd.colSpan = 2
-    createTd.innerText = "Create New/Open"
-    createRow.appendChild(createTd)
-    tbody.appendChild(createRow)
 
     table.appendChild(tbody)
     listEmt.appendChild(table)

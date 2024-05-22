@@ -1,5 +1,8 @@
 // init server connection
+// noinspection JSUnresolvedReference
 const socket = io();
+
+//socket.emit('authenticate', prompt("Zauberwort??"))
 
 // two genders
 let gender = true
@@ -383,6 +386,9 @@ function loadUid(uid) {
         }
     }
     const data = allList[uid]
+    if (data === undefined) {
+        return
+    }
     for (const type of data.values.types) {
         document.getElementById(type).classList.add("active")
     }

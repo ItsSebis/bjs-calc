@@ -38,8 +38,13 @@ const passwordsPreset = {
 let passwords = passwordsPreset
 let lists = {}
 
-let calcSock = {} // authentication
-let mobileSock = {} // authentication
+const allBest = {
+    true: {},
+    false: {}
+}
+
+let calcAuth = {} // authentication
+let mobileAuth = {} // authentication
 
 let sockets = {} // mobile sockets -> group
 let socketGroups = {} // group -> mobile socket
@@ -68,15 +73,22 @@ io.on('connection', (socket) => {
     // client connected
     //console.log("Client connected: " + socket.id)
     // get group data if any
-    calcSock[socket.id] = false
+    calcAuth[socket.id] = false
 
     socket.on('authenticate', (password) => {
-        if (bcrypt.compareSync(password, passwords.calc)) {
-
+        if (password === passwords.calc) {
+            socket.join('authenticated')
+            calcAuth[socket.id] = true
+            console.log("Authenticated calc " + socket.id)
+        } else {
+            socket.emit('reAuth')
         }
     })
 
     socket.on('edit', (socketGroup) => {
+    //     if (!socket.in('authenticated')) {
+    //         return
+    //     }
         //console.log(socket.id + " requests group " + socketGroup)
         if (lists[socketGroup] !== undefined) {
             socket.emit('setList', lists[socketGroup])
@@ -87,10 +99,12 @@ io.on('connection', (socket) => {
 
     // save local changes
     socket.on('commit', (socketList) => {
+        console.log(socket.id + " committed " + Object.keys(socketList))
+        const group = socketList[Object.keys(socketList)[0]].group
         if (Object.keys(socketList).length > 1) {
-            lists[socketList.group] = socketList
-        } else if (lists[socketList.group] !== undefined) {
-            delete lists[socketList.group]
+            lists[group] = socketList
+        } else if (lists[group] !== undefined) {
+            delete lists[group]
         }
         exportToFile()
         const listOfLists = {}
@@ -198,10 +212,6 @@ async function calcWinners() {
     //console.log(ageGroups)
 
     // sort in gender
-    const allBest = {
-        true: {},
-        false: {}
-    }
     for (const age in ageGroups) {
         const ageGroup = ageGroups[age]
         for (const gender in ageGroup) {
@@ -344,8 +354,8 @@ function serverConsole() {
             }
             case "calcs": {
                 console.log("Registered calculator clients:")
-                for (const calc in calcSock) {
-                    console.log(calc + ": " + calcSock[calc])
+                for (const calc in calcAuth) {
+                    console.log(calc + ": " + calcAuth[calc])
                 }
                 break
             }

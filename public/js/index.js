@@ -122,7 +122,7 @@ document.getElementById("addBtn").onclick = function () {
             return;
         }
     }
-    if (
+    /*if (
         // not all disciplines given
         Number(document.getElementById("sprintPoints").innerText) === 0 ||
         Number(document.getElementById("runPoints").innerText) === 0 ||
@@ -133,7 +133,7 @@ document.getElementById("addBtn").onclick = function () {
         if (!rs) {
             return;
         }
-    }
+    }*/
     const uid = document.getElementById("uid").value;
     let neededPoints
     if (gender) {
@@ -163,7 +163,7 @@ document.getElementById("addBtn").onclick = function () {
         cert: {
             name: document.getElementById("cert").innerText.split(" ")[0],
             needed: neededPoints,
-            age: document.getElementById("age").value,
+            age: Number(date.getFullYear()-Number(document.getElementById("age").value)),
             gender: gender
         }
     }
@@ -406,7 +406,11 @@ function loadUid(uid) {
     document.getElementById("ballM").value = data.values.ball.toString()
 
     // restore age
-    document.getElementById("age").value = data.cert.age
+    if (date.getFullYear()-data.cert.age > 18) {
+        document.getElementById("age").value = 19
+    } else {
+        document.getElementById("age").value = date.getFullYear()-data.cert.age
+    }
 
     // restore uid
     document.getElementById("uid").value = uid

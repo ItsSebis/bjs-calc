@@ -1,5 +1,8 @@
 const fs = require('fs'); // files
 
+// require bcrypt
+const bcrypt = require("bcrypt")
+
 const express = require('express')
 const backend = express()
 const mobileBackend = express()
@@ -7,6 +10,7 @@ const port = 1871
 const mobilePort = 1872
 const http = require('http')
 const { Server } = require('socket.io')
+const trace_events = require("trace_events");
 const server = http.createServer(backend)
 const mobileServer = http.createServer(mobileBackend)
 const io = new Server(server, {pingInterval: 1500, pingTimeout: 5000})
@@ -27,14 +31,18 @@ mobileBackend.get('/', (req, res) => {
 });
 
 // init vars
-let passwords = {
-    calc: "",
-    mobile: ""
+const passwordsPreset = {
+    calc: "BJS",
+    mobile: "BJS"
 }
+let passwords = passwordsPreset
 let lists = {}
-let calcSock = {}
-let sockets = {}
-let socketGroups = {}
+
+let calcSock = {} // authentication
+let mobileSock = {} // authentication
+
+let sockets = {} // mobile sockets -> group
+let socketGroups = {} // group -> mobile socket
 
 fs.readFile('./data.json', 'utf8', (err, data) => {
     if (!err) {
@@ -47,6 +55,12 @@ fs.readFile('./pass.json', 'utf8', (err, data) => {
         passwords = JSON.parse(data)
         console.log("Restored lists")
     }
+    if (passwords.calc === undefined) {
+        passwords.calc = passwordsPreset.calc
+    }
+    if (passwords.mobile === undefined) {
+        passwords.mobile = passwordsPreset.mobile
+    }
 })
 
 // code
@@ -55,6 +69,13 @@ io.on('connection', (socket) => {
     //console.log("Client connected: " + socket.id)
     // get group data if any
     calcSock[socket.id] = false
+
+    socket.on('authenticate', (password) => {
+        if (bcrypt.compareSync(password, passwords.calc)) {
+
+        }
+    })
+
     socket.on('edit', (socketGroup) => {
         //console.log(socket.id + " requests group " + socketGroup)
         if (lists[socketGroup] !== undefined) {
@@ -119,6 +140,10 @@ function exportToFile() {
             console.error(err)
         }
     })
+    exportPws()
+}
+
+function exportPws() {
     const passData = JSON.parse(JSON.stringify(passwords))
     fs.writeFile('./pass.json', JSON.stringify(passData), err => {
         if (err) {
@@ -235,6 +260,29 @@ function serverConsole() {
                 for (const calc in calcSock) {
                     console.log(calc + ": " + calcSock[calc])
                 }
+                break
+            }
+            case "passCalc": {
+                /*readline.question("Change web password > ", pw => {
+                    if (pw !== "") {
+                        /!*bcrypt
+                            .hashSync(pw, 12)
+                            .then(hash => {
+                                console.log('Hash ', hash)
+                                passwords.calc = hash
+                                exportPws()
+                            })
+                            .catch(err => console.error(err.message))*!/
+                        passwords.calc = bcrypt.hashSync(pw, 12)
+
+                        console.log(passwords)
+                        exportPws()
+                    }
+                })*/
+                break
+            }
+            case "getHashes": {
+                console.log(passwords)
                 break
             }
             default: {

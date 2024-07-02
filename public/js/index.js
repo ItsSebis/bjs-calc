@@ -2,22 +2,27 @@
 // noinspection JSUnresolvedReference
 const socket = io();
 
-//socket.emit('authenticate', prompt("Zauberwort??"))
-
 // two genders
 let gender = true
 
 // lists
-let allList = {
+let allList = {}
+/*let allList = {
     group: prompt("Welche Gruppe bearbeiten Sie?")
 }
 while (allList.group === null || allList.group === "") {
     allList.group = prompt("Welche Gruppe bearbeiten Sie?")
-}
-socket.emit('edit', allList.group)
+}*/
+socket.on('reAuth', () => {
+    socket.emit('authenticate', prompt("Password..."))
+})
+socket.on('regroup', () => {
+    socket.emit('edit', prompt("Welche Gruppe bearbeiten Sie?"))
+})
 socket.on('setList', (originList) => {
     console.log(originList)
     allList = originList
+    console.log(allList.group)
     document.getElementById('group').innerText = allList.group
     calcList()
     sendResults()

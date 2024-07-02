@@ -20,6 +20,8 @@ const readlineSystem = require('readline').createInterface({
     output: process.stdout
 });
 const readline = require('readline')
+const {all} = require("express/lib/application");
+const moment = require("moment/moment");
 
 backend.use(express.static("./public"))
 backend.get('/', (req, res) => {
@@ -74,11 +76,13 @@ io.on('connection', (socket) => {
     //console.log("Client connected: " + socket.id)
     // get group data if any
     calcAuth[socket.id] = false
+    socket.emit('reAuth')
 
     socket.on('authenticate', (password) => {
         if (password === passwords.calc) {
             socket.join('authenticated')
             calcAuth[socket.id] = true
+            socket.emit('regroup')
             console.log("Authenticated calc " + socket.id)
         } else {
             socket.emit('reAuth')
@@ -86,12 +90,12 @@ io.on('connection', (socket) => {
     })
 
     socket.on('edit', (socketGroup) => {
-    //     if (!socket.in('authenticated')) {
-    //         return
-    //     }
+        if (!socket.in('authenticated') || socketGroup === "") {
+            return
+        }
         //console.log(socket.id + " requests group " + socketGroup)
         if (lists[socketGroup] !== undefined) {
-            socket.emit('setList', lists[socketGroup])
+            socket.emit('setList', getGroupSendList(socketGroup))
         } else {
             socket.emit('setList', {group: socketGroup})
         }
@@ -99,6 +103,10 @@ io.on('connection', (socket) => {
 
     // save local changes
     socket.on('commit', (socketList) => {
+        if (!socket.in('authenticated')) {
+            console.log("Invalid commit")
+            return
+        }
         console.log(socket.id + " committed " + Object.keys(socketList))
         const group = socketList[Object.keys(socketList)[0]].group
         if (Object.keys(socketList).length > 1) {
@@ -109,10 +117,13 @@ io.on('connection', (socket) => {
         exportToFile()
         const listOfLists = {}
         for (const list in lists) {
+            if (lists[list].group !== undefined) {
+                lists[list].group = list
+            }
             listOfLists[list] = Object.keys(lists[list]).length-1
         }
-        io.emit('lists', listOfLists)
-        mo.emit('setList', lists)
+        io.to('authenticated').emit('lists', listOfLists)
+        mo.to('authenticated').emit('setList', lists)
         //console.log(socket.id + "'s list saved")
     })
 })
@@ -120,10 +131,21 @@ mo.on('connection', (socket) => {
     // mobile client connected
     //console.log("Mobile client connected: " + socket.id)
     sockets[socket.id] = null
-    socket.emit('setList', lists)
+    socket.emit('reAuth')
+
+    socket.on('authenticate', (password) => {
+        if (password === passwords.mobile) {
+            socket.join('authenticated')
+            calcAuth[socket.id] = true
+            socket.emit('setList', lists)
+            console.log("Authenticated mobile " + socket.id)
+        } else {
+            socket.emit('reAuth')
+        }
+    })
     // client select group
     socket.on('selectGroup', (group) => {
-        //console.log(socket.id + " requests group " + group)
+        console.log(socket.id + " requests group " + group)
         if (sockets[socket.id] !== null) {
             delete socketGroups[sockets[socket.id]]
             sockets[socket.id] = null
@@ -135,12 +157,15 @@ mo.on('connection', (socket) => {
     })
 
     socket.on('commit', (groupList) => {
+        console.log("Mobile commit: " + socket.id + " in group " + sockets[socket.id] + " with " + Object.keys(groupList).length + " entries")
         if (sockets[socket.id] === undefined || sockets[socket.id] === null || socketGroups[sockets[socket.id]] !== socket.id
         || Object.keys(groupList).length !== Object.keys(lists[sockets[socket.id]]).length) {
+            console.log("Invalid commit")
             return
         }
+        console.log("Mobile commit: " + socket.id + " in group " + sockets[socket.id] + " with " + Object.keys(groupList).length + " entries")
         lists[sockets[socket.id]] = groupList
-        mo.emit('setList', lists)
+        mo.to('authenticated').emit('setList', lists)
         exportToFile()
     })
 
@@ -167,6 +192,12 @@ function exportPws() {
             console.error(err)
         }
     })
+}
+
+function getGroupSendList(group) {
+    const list = lists[group]
+    list.group = group
+    return list
 }
 
 async function calcWinners() {
@@ -240,19 +271,7 @@ async function calcWinners() {
         }
     }
 
-    //console.log(allBest)
-    // send data to mobile clients
-    const tmpLists = {}
-    for (const group in lists) {
-        if (socketGroups[group] === undefined) {
-            tmpLists[group] = lists[group]
-        }
-    }
-    //mo.emit('setList', tmpLists)
-
-    setTimeout(() => {
-        calcWinners()
-    }, 1000)
+    return allBest
 }
 
 function serverConsole() {
@@ -287,33 +306,36 @@ function serverConsole() {
                         if (lineNumber > 0) {
                             // error catching
                             if (
-                                row.length < 4 ||
+                                row.length < 5 ||
                                 row[0].match(/[^A-Za-z0-9 ]/) ||
-                                isNaN(Number(row[1])) ||
-                                !row[3].match(/[MWmw]/)
+                                row[1].match(/[^A-Za-z0-9 ]/) ||
+                                !moment(row[2], "DD.MM.yyyy", true).isValid() ||
+                                !row[4].match(/[MWmw]/)
                             ) {
                                 console.log("Line " + lineNumber + " is not formatted correctly!")
                             } else {
-                                if (lists[row[2]] === undefined) {
-                                    lists[row[2]] = {}
+                                row[0] = row[0] + " " + row[1]
+                                row[2] = moment(row[2], "DD.MM.yyyy", true).year()
+                                if (lists[row[3]] === undefined) {
+                                    lists[row[3]] = {}
                                 }
-                                if (lists[row[2]][row[0]] === undefined) {
-                                    lists[row[2]][row[0]] = {}
-                                    lists[row[2]][row[0]].group = row[2]
-                                    lists[row[2]][row[0]].cert = {
+                                if (lists[row[3]][row[0]] === undefined) {
+                                    lists[row[3]][row[0]] = {}
+                                    lists[row[3]][row[0]].group = row[3]
+                                    lists[row[3]][row[0]].cert = {
                                         age: row[1],
                                         gender: row[3].toLowerCase() === "w",
                                         name: "DnS",
                                         needed: 1000
                                     }
-                                    lists[row[2]][row[0]].points = {
+                                    lists[row[3]][row[0]].points = {
                                         sum: 0,
                                         sprint: 0,
                                         run: 0,
                                         jump: 0,
                                         ball: 0
                                     }
-                                    lists[row[2]][row[0]].values = {
+                                    lists[row[3]][row[0]].values = {
                                         sprint: 0,
                                         run: 0,
                                         jump: 0,
@@ -321,7 +343,7 @@ function serverConsole() {
                                         types: []
                                     }
                                 }
-                                console.log(lineNumber + ": " + row[0] + " in group " + row[2])
+                                console.log(lineNumber + ": " + row[0] + " in group " + row[3])
                             }
                         }
                         lineNumber++
@@ -339,6 +361,14 @@ function serverConsole() {
                         console.error("Error reading the CSV file:", err);
                     });
 
+                    for (const group in lists) {
+                        console.log(lists[group])
+                        const groupName = lists[group][Object.keys(group)[0]];
+                        if (groupName !== undefined) {
+                            lists[group].group = groupName
+                        }
+                    }
+
                     exportToFile()
                 } else {
                     console.log("Couldn't find import.csv file in directory.")
@@ -347,9 +377,7 @@ function serverConsole() {
             }
             case "mobiles": {
                 console.log("Registered mobile clients:")
-                for (const mobile in sockets) {
-                    console.log(mobile + ": " + sockets[mobile])
-                }
+                sockets.forEach(mobile => console.log(mobile + ": " + sockets[mobile]))
                 break
             }
             case "calcs": {
@@ -386,6 +414,10 @@ function serverConsole() {
                 console.log(lists)
                 break
             }
+            case "winners": {
+                console.log(calcWinners())
+                break
+            }
             case "": {
                 break
             }
@@ -397,6 +429,21 @@ function serverConsole() {
     })
 }
 
+async function updateMobiles() {
+    //console.log(allBest)
+    // send data to mobile clients
+    const tmpLists = {}
+    for (const group in lists) {
+        if (socketGroups[group] === undefined) {
+            tmpLists[group] = lists[group]
+        }
+    }
+    mo.to('authenticated').emit('setList', tmpLists)
+    setTimeout(() => {
+        updateMobiles().then()
+    }, 150);
+}
+
 // listen
 server.listen(port, "0.0.0.0", () => {
     console.log(`Listening for connections on ${port}`)
@@ -404,8 +451,10 @@ server.listen(port, "0.0.0.0", () => {
 mobileServer.listen(mobilePort, "0.0.0.0", () => {
     console.log(`Listening for connections on ${mobilePort}`)
 })
-
-calcWinners().then()
 setTimeout(() => {
     serverConsole()
 }, 100)
+
+setTimeout(() => {
+    updateMobiles().then()
+}, 100);

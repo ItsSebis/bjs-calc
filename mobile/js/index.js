@@ -12,7 +12,7 @@ socket.on('setList', (originList) => {
         originList[group] = lists[group]
     }
     lists = originList
-    console.log(lists)
+    //console.log(lists)
     // server list received
     for (const gid in lists) {
         if (document.getElementById("group%"+gid) === null) {
@@ -78,6 +78,10 @@ socket.on('setList', (originList) => {
             group.remove()
         }
     }
+})
+
+socket.on('reAuth', () => {
+    socket.emit('authenticate', prompt("Password..."))
 })
 socket.on('kick', () => {
     window.location.reload()
@@ -188,6 +192,7 @@ for (const dispBtn of document.getElementsByClassName("dispBtn")) {
 
 function sendResults() {
     // send only local changes
+    console.log(lists[group] + " | commit")
     if (group === "") {
         return
     }
@@ -287,8 +292,9 @@ function addPoints(uid) {
 }
 
 function calcCert(points, uid) {
-    let age = lists[group][uid].cert.age
-    if (age === "null") {
+    let age = (new Date().getFullYear()) - (lists[group][uid].cert.age)
+    if (isNaN(age)) {
+        console.log("age is NaN" + age)
         return
     }
     let limits = ACs.girl.certificates;
@@ -300,7 +306,7 @@ function calcCert(points, uid) {
     } else if (limits[age].s < points) {
         lists[group][uid].cert.name = "Siegerurkunde"
     } else {
-        lists[group][uid].cert.name = "Teinehmerurkunde"
+        lists[group][uid].cert.name = "Teilnehmerurkunde"
     }
     sendResults()
     //document.getElementById("cert").innerHTML = cert;

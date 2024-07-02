@@ -307,8 +307,8 @@ function serverConsole() {
                             // error catching
                             if (
                                 row.length < 5 ||
-                                row[0].match(/[^A-Za-z0-9- ]/) ||
-                                row[1].match(/[^A-Za-z0-9- ]/) ||
+                                row[0].match(/[^A-Za-z0-9-ÄäÖöÜü ]/) ||
+                                row[1].match(/[^A-Za-z0-9-ÄäÖöÜü ]/) ||
                                 !moment(row[2], "DD.MM.yyyy", true).isValid() ||
                                 !row[4].match(/[MWmw]/)
                             ) {

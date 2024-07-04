@@ -448,8 +448,8 @@ function serverConsole() {
                             row[1] = removeAccents(row[1].replace("ä", "a?").replace("ö", "o?").replace("ü", "u?"))
                             if (
                                 row.length < 5 ||
-                                row[0].match(/[^A-Za-z0-9-ÄäÖöÜü?ß ]/u) ||
-                                row[1].match(/[^A-Za-z0-9-ÄäÖöÜü?ß ]/u) ||
+                                row[0].match(/[^A-Za-z0-9-ÄäÖöÜü?éèêâß ]/u) ||
+                                row[1].match(/[^A-Za-z0-9-ÄäÖöÜü?éèêâß ]/u) ||
                                 !moment(row[2], "DD.MM.yyyy", true).isValid() ||
                                 !row[4].match(/[MWmw]/)
                             ) {

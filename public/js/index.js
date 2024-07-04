@@ -260,7 +260,8 @@ async function createAllPdf(){
             y: 500,
             size: 14,
             font: timesRomanFontH,
-            color: rgb(0,0,0)
+            color: rgb(0,0,0),
+
         })
     }
 
@@ -332,6 +333,7 @@ async function createAllPdf(){
 }
 
 function sendResults() {
+    allList.group = group
     socket.emit('commit', allList)
 }
 

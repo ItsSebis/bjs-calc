@@ -1,8 +1,9 @@
 const fs = require('fs'); // files
 
-// require bcrypt
-const bcrypt = require("bcrypt")
+// è tron
+const removeAccents = require('remove-accents');
 
+const PDFDocument = require('pdfkit');
 const express = require('express')
 const backend = express()
 const mobileBackend = express()
@@ -81,7 +82,6 @@ io.on('connection', (socket) => {
     socket.on('authenticate', (password) => {
         if (password === passwords.calc) {
             socket.join('authenticated')
-            calcAuth[socket.id] = true
             socket.emit('regroup')
             console.log("Authenticated calc " + socket.id)
         } else {
@@ -99,6 +99,7 @@ io.on('connection', (socket) => {
         } else {
             socket.emit('setList', {group: socketGroup})
         }
+        calcAuth[socket.id] = socketGroup
     })
 
     // save local changes
@@ -107,8 +108,8 @@ io.on('connection', (socket) => {
             console.log("Invalid commit")
             return
         }
-        console.log(socket.id + " committed " + Object.keys(socketList))
-        const group = socketList[Object.keys(socketList)[0]].group
+        const group = calcAuth[socket.id]
+        console.log(socket.id + " committed in " + group + ": " + Object.keys(socketList))
         if (Object.keys(socketList).length > 1) {
             lists[group] = socketList
         } else if (lists[group] !== undefined) {
@@ -195,52 +196,172 @@ function exportPws() {
 }
 
 function getGroupSendList(group) {
-    const list = lists[group]
+    let list = lists[group]
     list.group = group
     return list
+}
+
+async function exportPdf(group) {
+/*
+
+    // Adding functionality
+    doc
+        .fontSize(27)
+        .text('This the article for GeeksforGeeks', 100, 100);
+
+    // Adding an image in the pdf.
+
+    // doc.image('download3.jpg', {
+    //     fit: [300, 300],
+    //     align: 'center',
+    //     valign: 'center'
+    // });
+
+    doc
+        .addPage()
+        .fontSize(15)
+        .text('Generating PDF with the help of pdfkit', 100, 100);
+
+
+
+    // Apply some transforms and render an SVG path with the
+    // 'even-odd' fill rule
+    doc
+        .scale(0.6)
+        .translate(470, -380)
+        .path('M 250,75 L 323,301 131,161 369,161 177,301 z')
+        .fill('red', 'even-odd')
+        .restore();
+
+    // Add some text with annotations
+    doc
+        .addPage()
+        .fillColor('blue')
+        .text('The link for GeeksforGeeks website', 100, 100)
+        .link(100, 100, 160, 27, 'https://www.geeksforgeeks.org/');
+*/
+
+    // Create Honour Certificates
+    // Create a document
+    const ehrenCert = new PDFDocument();
+    const siegerCert = new PDFDocument();
+    const teilCert = new PDFDocument();
+
+    // Saving the pdf file in root directory.
+    if (!fs.existsSync('urkunden')) {
+        fs.mkdirSync('urkunden')
+    }
+    if (!fs.existsSync('urkunden/'+group)) {
+        fs.mkdirSync('urkunden/'+group)
+    }
+    ehrenCert.pipe(fs.createWriteStream('urkunden/' + group + '/Ehrenurkunden-' + group + '.pdf'));
+    siegerCert.pipe(fs.createWriteStream('urkunden/' + group + '/Siegerurkunden-' + group + '.pdf'));
+    teilCert.pipe(fs.createWriteStream('urkunden/' + group + '/Teilnahmeurkunden-' + group + '.pdf'));
+
+    for (const uid in lists[group]) {
+        const data = lists[group][uid]
+
+        if (data.cert === undefined || data.cert.name === "DnS" || data.points.sum === 0) {
+            continue
+        }
+        if (data.cert.name === "Ehrenurkunde") {
+            ehrenCert.addPage({size: "A4", layout: "landscape"})
+                .fillColor("black")
+                .fontSize(14)
+                .text(data.points.sum, 625, 300)
+                .text(uid, 600, 360)
+        } else if (data.cert.name === "Siegerurkunde") {
+            siegerCert.addPage({size: "A5"})
+                .fillColor("black")
+                .fontSize(14)
+                .text(data.points.sum, 205, 300)
+                .text(uid, 190, 360)
+        } else if (data.cert.name === "Teilnehmerurkunde") {
+            teilCert.addPage({size: "A5"})
+                .fillColor("black")
+                .fontSize(14)
+                .text(data.points.sum, 205, 300)
+                .text(uid, 190, 360)
+        }
+    }
+
+    // Finalize PDF file
+    ehrenCert.end();
+    siegerCert.end();
+    teilCert.end()
 }
 
 async function calcWinners() {
     const date = new Date()
 
     // sort in age groups
-    const ageGroups = {}
+    let ageGroups = {}
     for (const group in lists) {
         const groupList = lists[group]
         for (const uid in groupList) {
             if (uid === "group") {
                 continue
             }
-            if (ageGroups[date.getFullYear()-groupList[uid].cert.age] === undefined) {
-                ageGroups[date.getFullYear()-groupList[uid].cert.age] = {}
+            if (date.getFullYear()-groupList[uid].cert.age < 19) {
+
+                if (ageGroups[date.getFullYear()-groupList[uid].cert.age] === undefined) {
+                    ageGroups[date.getFullYear()-groupList[uid].cert.age] = {}
+                }
+
+                if (ageGroups[date.getFullYear()-groupList[uid].cert.age][groupList[uid].cert.gender] === undefined) {
+                    ageGroups[date.getFullYear()-groupList[uid].cert.age][groupList[uid].cert.gender] = {}
+                }
+
+                ageGroups[date.getFullYear() - groupList[uid].cert.age][groupList[uid].cert.gender][uid + " (" + group + ")"] = groupList[uid]
+            } else {
+                if (ageGroups[19] === undefined) {
+                    ageGroups[19] = {true: {}, false: {}}
+                }
+                if (ageGroups[19][groupList[uid].cert.gender] === undefined) {
+                    ageGroups[19][groupList[uid].cert.gender] = {}
+                }
+                ageGroups[19][groupList[uid].cert.gender][uid + " (" + group + ")"] = groupList[uid]
             }
-            if (ageGroups[date.getFullYear()-groupList[uid].cert.age][groupList[uid].cert.gender] === undefined) {
-                ageGroups[date.getFullYear()-groupList[uid].cert.age][groupList[uid].cert.gender] = {}
-            }
-            ageGroups[date.getFullYear()-groupList[uid].cert.age][groupList[uid].cert.gender][uid+" ("+group+")"] = groupList[uid]
         }
     }
+    //console.log(ageGroups)
 
     // sort out
     for (const age in ageGroups) {
-        const ageGroup = ageGroups[age]
+        let ageGroup = ageGroups[age]
         for (const gender in ageGroup) {
-            const genderGroup = ageGroup[gender]
+            let genderGroup = ageGroup[gender]
             let topHere = 0
             for (let i = 0; i < 2; i++) {
                 for (const uid in genderGroup) {
                     const data = genderGroup[uid]
-                    if (data.points.sum < topHere) {
+                    if (data.points.sum < topHere || data.points.sum === 0) {
                         delete genderGroup[uid]
                     } else {
                         topHere = data.points.sum
                     }
                 }
             }
+            ageGroup[gender] = genderGroup
         }
+        ageGroups[age] = ageGroup
     }
 
-    //console.log(ageGroups)
+    console.log("Jahrgangsbeste:")
+    for (const age in ageGroups) {
+        const ageYear = new Date().getFullYear() - age
+        const ageGroup = ageGroups[age]
+        const genderStr = {true: "Mädchen", false: "Jungen"}
+        console.log(ageYear + ":")
+        for (const gender in ageGroup) {
+            if (Object.keys(ageGroup[gender]).length >= 1) {
+                console.log("   " + genderStr[gender] + ":")
+                for (const uid in ageGroup[gender]) {
+                    console.log("      " + uid + " (" + ageGroup[gender][uid].points.sum + ")")
+                }
+            }
+        }
+    }
 
     // sort in gender
     for (const age in ageGroups) {
@@ -255,20 +376,38 @@ async function calcWinners() {
         }
     }
 
+    //console.log(allBest)
+
     // sort out
     for (const gender in allBest) {
-        let topHere = 0
+        //console.log("Working on gender " + gender)
+        let topHere = -5000
         const genderGroup = allBest[gender]
-        for (let i = 0; i < 2 ; i++) {
+        for (let i = 0; i < 2; i++) {
             for (const uid in genderGroup) {
                 const data = genderGroup[uid]
-                if (data.points.sum-data.cert.needed < topHere) {
+                if (data.points.sum - data.cert.needed < topHere) {
                     delete genderGroup[uid]
                 } else {
-                    topHere = data.points.sum-data.cert.needed
+                    topHere = data.points.sum - data.cert.needed
                 }
+                //console.log(topHere + " " + data.points.sum + " " + data.cert.needed + " " + uid)
             }
         }
+        //console.log(genderGroup)
+        allBest[gender] = genderGroup
+    }
+
+    console.log("Gesamtbeste:")
+    if (Object.keys(allBest.true).length >= 1) {
+        console.log("Mädchen: " + Object.keys(allBest.true)[0] + " (" + allBest.true[Object.keys(allBest.true)[0]].points.sum + ")")
+    } else {
+        console.log("Keine teilnehmenden Mädchen")
+    }
+    if (Object.keys(allBest.false).length >= 1) {
+        console.log("Jungen: " + Object.keys(allBest.false)[0] + " (" + allBest.false[Object.keys(allBest.false)[0]].points.sum + ")")
+    } else {
+        console.log("Keine teilnehmenden Jungen")
     }
 
     return allBest
@@ -305,15 +444,19 @@ function serverConsole() {
                         const row = line.split(";");
                         if (lineNumber > 0) {
                             // error catching
+                            row[0] = removeAccents(row[0].replace("ä", "a?").replace("ö", "o?").replace("ü", "u?"))
+                            row[1] = removeAccents(row[1].replace("ä", "a?").replace("ö", "o?").replace("ü", "u?"))
                             if (
                                 row.length < 5 ||
-                                row[0].match(/[^A-Za-z0-9-ÄäÖöÜü ]/) ||
-                                row[1].match(/[^A-Za-z0-9-ÄäÖöÜü ]/) ||
+                                row[0].match(/[^A-Za-z0-9-ÄäÖöÜü? ]/u) ||
+                                row[1].match(/[^A-Za-z0-9-ÄäÖöÜü? ]/u) ||
                                 !moment(row[2], "DD.MM.yyyy", true).isValid() ||
                                 !row[4].match(/[MWmw]/)
                             ) {
                                 console.log("Line " + lineNumber + " is not formatted correctly!")
                             } else {
+                                row[0] = row[0].replace("a?", "ä").replace("o?", "ö").replace("u?", "ü")
+                                row[1] = row[1].replace("a?", "ä").replace("o?", "ö").replace("u?", "ü")
                                 row[0] = row[0] + " " + row[1]
                                 row[2] = moment(row[2], "DD.MM.yyyy", true).year()
                                 if (lists[row[3]] === undefined) {
@@ -323,8 +466,8 @@ function serverConsole() {
                                     lists[row[3]][row[0]] = {}
                                     lists[row[3]][row[0]].group = row[3]
                                     lists[row[3]][row[0]].cert = {
-                                        age: row[1],
-                                        gender: row[3].toLowerCase() === "w",
+                                        age: row[2],
+                                        gender: row[4].toLowerCase() === "w",
                                         name: "DnS",
                                         needed: 1000
                                     }
@@ -343,7 +486,7 @@ function serverConsole() {
                                         types: []
                                     }
                                 }
-                                console.log(lineNumber + ": " + row[0] + " in group " + row[3])
+                                console.log(lineNumber + ": " + row[0] + " in group " + row[3] + " in year " + row[2])
                             }
                         }
                         lineNumber++
@@ -415,7 +558,13 @@ function serverConsole() {
                 break
             }
             case "winners": {
-                console.log(calcWinners())
+                calcWinners().then()
+                break
+            }
+            case "export": {
+                for (const group in lists) {
+                    exportPdf(group).then()
+                }
                 break
             }
             case "": {

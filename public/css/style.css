@@ -78,7 +78,9 @@ a:hover {
 }
 
 .list {
+    overflow-y: scroll;
     width: 550px;
+    max-height: 98%;
     position: absolute;
     right: 10px;
     top: 10px;

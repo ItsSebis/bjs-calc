@@ -297,6 +297,9 @@ function calcCert(points, uid) {
         console.log("age is NaN" + age)
         return
     }
+    if (age > 19) {
+        age = 19
+    }
     let limits = ACs.girl.certificates;
     if (!lists[group][uid].cert.gender) {
         limits = ACs.boy.certificates;

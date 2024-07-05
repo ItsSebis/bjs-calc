@@ -357,7 +357,7 @@ async function calcWinners() {
             if (Object.keys(ageGroup[gender]).length >= 1) {
                 console.log("   " + genderStr[gender] + ":")
                 for (const uid in ageGroup[gender]) {
-                    console.log("      " + uid + " (" + ageGroup[gender][uid].points.sum + ")")
+                    console.log("      " + uid + " (" + ageGroup[gender][uid].points.sum + ") +" + (ageGroup[gender][uid].points.sum-ageGroup[gender][uid].cert.needed))
                 }
             }
         }
@@ -400,12 +400,12 @@ async function calcWinners() {
 
     console.log("Gesamtbeste:")
     if (Object.keys(allBest.true).length >= 1) {
-        console.log("Mädchen: " + Object.keys(allBest.true)[0] + " (" + allBest.true[Object.keys(allBest.true)[0]].points.sum + ")")
+        console.log("Mädchen: " + Object.keys(allBest.true)[0] + " (" + allBest.true[Object.keys(allBest.true)[0]].points.sum + ") +" + (allBest.true[Object.keys(allBest.true)[0]].points.sum-allBest.true[Object.keys(allBest.true)[0]].cert.needed))
     } else {
         console.log("Keine teilnehmenden Mädchen")
     }
     if (Object.keys(allBest.false).length >= 1) {
-        console.log("Jungen: " + Object.keys(allBest.false)[0] + " (" + allBest.false[Object.keys(allBest.false)[0]].points.sum + ")")
+        console.log("Jungen: " + Object.keys(allBest.false)[0] + " (" + allBest.false[Object.keys(allBest.false)[0]].points.sum + ") +" + (allBest.false[Object.keys(allBest.false)[0]].points.sum-allBest.false[Object.keys(allBest.false)[0]].cert.needed))
     } else {
         console.log("Keine teilnehmenden Jungen")
     }

@@ -115,8 +115,7 @@ let ACs = {
 // code
 document.getElementById("age").onchange = function () {addPoints();}
 document.getElementById("addBtn").onclick = function () {
-    if (document.getElementById("uid").value === "" ||
-        document.getElementById("uid").value.match(/[^A-Za-z0-9 ]/)) {
+    if (document.getElementById("uid").value === "") {
         alert("Gib bitte einen einzigartigen Identifikator aus Buchstaben und Zahlen an!")
         return
     }
